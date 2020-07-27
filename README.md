@@ -1,13 +1,15 @@
-# NNV
+# nnv
 Matlab Toolbox for Neural Network Verification
 
 I developed this toolbox when I was a Ph.D student at Vanderbilt University. This toolbox implements reachability methods for analyzing neural networks and learning-enabled autonomous Cyber-Physical Systems.
 
-The original repository of NNV is: https://github.com/verivital/nnv
+The original repository of nnv is: https://github.com/verivital/nnv
 
-Please use https://github.com/transafeailab/NNV for the newest updates of NNV.
+Please use https://github.com/transafeailab/NNV for the newest updates of nnv.
 
-# User Manual: https://github.com/transafeailab/NNV/manual.pdf  
+# User Manual: 
+
+https://github.com/transafeailab/nnv/manual.pdf  
 
 # Installation:
 
@@ -18,11 +20,11 @@ Please use https://github.com/transafeailab/NNV for the newest updates of NNV.
        Deep Learning
        System Identification
 
-    2) Clone or download the NNV toolbox from (https://github.com/transafeailab/NNV)
+    2) Clone or download the nnv toolbox from (https://github.com/transafeailab/nnv)
     
-    git clone https://github.com/transafeailab/NNV.git
+    git clone https://github.com/transafeailab/nnv.git
 
-    3) Open Matlab, then go to the directory where NNV exists on your machine, then run the `install.m` script located at /NNV/
+    3) Open Matlab, then go to the directory where nnv exists on your machine, then run the `install.m` script located at /nnv/
 
     4) To run verification for convolutional neural networks you may need additional packages installed
 
@@ -32,7 +34,7 @@ Please use https://github.com/transafeailab/NNV for the newest updates of NNV.
 
 # Uninstallation:
 
-    1) Open matlab, then go to `/NNV/` and execute the `uninstall.m` script
+    1) Open matlab, then go to `/nnv/` and execute the `uninstall.m` script
 
 # Running tests and examples:
 
@@ -40,7 +42,7 @@ Please use https://github.com/transafeailab/NNV for the newest updates of NNV.
 
 # Artifacts:
 
-   Go into the 'examples/artifact' for the codes used in NNV's publications. 
+   Go into the 'examples/artifact' for the codes used in nnv's publications. 
 
 # Contributors
 
@@ -50,6 +52,7 @@ Please use https://github.com/transafeailab/NNV for the newest updates of NNV.
 * [Patrick Musau](https://scholar.google.com/citations?user=C2RS3i8AAAAJ&hl=en)
 * [Diego Manzanas Lopez](https://scholar.google.com/citations?user=kgpZCIAAAAAJ&hl=en)
 * Xiaodong Yang
+* Neelanjana Pal
 * [Luan Viet Nguyen](https://luanvietnguyen.github.io)
 * [Taylor T. Johnson](http://www.taylortjohnson.com)
 
