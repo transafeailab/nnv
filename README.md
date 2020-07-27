@@ -7,7 +7,7 @@ The original repository of nnv is: https://github.com/verivital/nnv
 
 Please use https://github.com/transafeailab/NNV for the newest updates of nnv.
 
-# User Manual: 
+# User manual: 
 
 https://github.com/transafeailab/nnv/manual.pdf  
 
@@ -35,6 +35,10 @@ https://github.com/transafeailab/nnv/manual.pdf
 # Uninstallation:
 
     1) Open matlab, then go to `/nnv/` and execute the `uninstall.m` script
+
+# An introduction to nnv
+
+[![Alt text](https://img.youtube.com/vi/Wx8xso9KbQU/0.jpg)](https://www.youtube.com/watch?v=Wx8xso9KbQU)
 
 # Running tests and examples:
 
