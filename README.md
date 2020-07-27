@@ -9,7 +9,9 @@ Please use https://github.com/transafeailab/nnv for the newest updates of nnv.
 
 # User manual: 
 
-*[Manual](https://github.com/transafeailab/nnv/blob/master/manual.pdf)
+[A first draft of user manual](https://github.com/transafeailab/nnv/blob/master/manual.pdf)
+
+I will update the user manual frequently. 
 
 # Installation:
 
