@@ -5,11 +5,11 @@ I developed this toolbox when I was a Ph.D student at Vanderbilt University. Thi
 
 The original repository of nnv is: https://github.com/verivital/nnv
 
-Please use https://github.com/transafeailab/NNV for the newest updates of nnv.
+Please use https://github.com/transafeailab/nnv for the newest updates of nnv.
 
 # User manual: 
 
-https://github.com/transafeailab/nnv/manual.pdf  
+https://github.com/transafeailab/nnv/manual.pdf 
 
 # Installation:
 
