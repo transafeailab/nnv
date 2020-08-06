@@ -264,7 +264,7 @@ classdef TanhLayer < handle
                     error('Invalid number of input arguments (should be 1, 2, 3, 4, 5, or 6)');
             end
             
-            if strcmp(method, 'approx-star') || strcmp(method, 'abs-dom')
+            if strcmp(method, 'approx-star') || strcmp(method, 'abs-dom') || contains(method, 'relax-star')
                 images = obj.reach_star_multipleInputs(in_images, method, option, relaxFactor, dis_opt, lp_solver);
             elseif strcmp(method, 'approx-zono')
                 images = obj.reach_zono_multipleInputs(in_images, option);

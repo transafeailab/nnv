@@ -661,6 +661,7 @@ classdef PosLin
             d2 = -I.V(index, 1);
             
             %case 3: y(index) <= (ub/(ub - lb))*(x-lb)
+            
             a = ub./(ub - lb); % divide element-wise
             b = a.*lb; % multiply element-wise
             C3 = [-a.*I.V(index, 2:n+1) V2(index, 1:m)];
@@ -781,8 +782,11 @@ classdef PosLin
 
         end        
         
-        % a relaxed star-approx method
-        function S = reach_relaxed_star_approx(varargin)
+    end
+    
+    methods(Static) % reachability analysis using relax-star method
+        % a relaxed star-approx method using distance heristics
+        function S = reach_relaxed_star_dis(varargin)
             % @I: star input set
             % @relaxFactor: a relaxFactor
             % @S: star output set
@@ -899,8 +903,671 @@ classdef PosLin
             end
 
         end
+        
+        
+        % a relaxed star-approx method using area heuristic
+        % optimize ranges of neurons that have largest estimated areas
+        function S = reach_relaxed_star_area(varargin)
+            % @I: star input set
+            % @relaxFactor: a relaxFactor
+            % @S: star output set
 
+            % author: Dung Tran
+            % date: 7/27/2020
 
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = 'single';
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 3
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 4
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'linprog';
+                case 5
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3, 4 or 5');
+            end
+
+            if ~isa(I, 'Star')
+                error('Input is not a star');
+            end
+            if relaxFactor < 0 || relaxFactor > 1
+                error('Invalid relax factor');
+            end
+
+            if isempty(I)
+                S = [];
+            else
+                [lb, ub] = I.estimateRanges;           
+                % find all indexes having ub <= 0, then reset the
+                % values of the elements corresponding to these indexes to 0
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding all neurons (in %d neurons) with ub <= 0...', length(ub));
+                end
+                map1 = find(ub <= 0); % computation map
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
+                end
+                map2 = find(lb < 0 & ub > 0);
+                n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
+                end
+                
+                areas = 0.5*(abs(ub(map2)).*abs(lb(map2))); % estimated areas of triangle overapproximation at all neurons
+                [~,midx] = sort(areas, 'descend');
+                map21 = map2(midx(1:n1)); % neurons with optimized ranged
+                map22 = map2(midx(n1+1:length(map2))); % neurons without optimized ranges
+                lb1 = lb(map22);
+                ub1 = ub(map22); 
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize upper bounds of %d neurons: ', length(map21));
+                end
+                xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
+                map3 = find(xmax <= 0);
+
+                n = length(map3);
+                map4 = zeros(n,1);
+                for i=1:n
+                    map4(i) = map21(map3(i));
+                end
+                map11 = [map1; map4];
+                In = I.resetRow(map11); % reset to zero at the element having ub <= 0
+                
+                % find all indexes that have lb < 0 & ub > 0, then
+                % apply the over-approximation rule for ReLU
+                
+                map5 = find(xmax > 0);
+                map6 = map21(map5); % all indexes having ub > 0
+                xmax1 = xmax(map5); % upper bound of all neurons having ub > 0
+                
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize lower bounds of %d neurons: ', length(map6));
+                end
+                xmin = I.getMins(map6, option, dis_opt, lp_solver); 
+                map7 = find(xmin < 0); 
+                map8 = map6(map7); % all indexes having lb < 0 & ub > 0
+                lb2 = xmin(map7);  % lower bound of all indexes having lb < 0 & ub > 0
+                ub2 = xmax1(map7); % upper bound of all neurons having lb < 0 & ub > 0
+
+                map9 = [map22; map8];
+                lb3 = [lb1; lb2];
+                ub3 = [ub1; ub2];
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d/%d neurons have lb < 0 & ub > 0', length(map9), length(ub));
+                    fprintf('\nConstruct new star set, %d new predicate variables are introduced', length(map9));
+                end
+                S = PosLin.multipleStepReachStarApprox_at_one(In, map9, lb3, ub3); % one-shot approximation
+               
+            end
+
+        end
+        
+        
+        % a relaxed star-approx method using lower bound and upper bound heuristic
+        % optimize ranges of neurons that have largest lower bounds and
+        % upper bounds
+        function S = reach_relaxed_star_lb_ub(varargin)
+            % @I: star input set
+            % @relaxFactor: a relaxFactor
+            % @S: star output set
+
+            % author: Dung Tran
+            % date: 7/27/2020
+
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = 'single';
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 3
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 4
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'linprog';
+                case 5
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3, 4 or 5');
+            end
+
+            if ~isa(I, 'Star')
+                error('Input is not a star');
+            end
+            if relaxFactor < 0 || relaxFactor > 1
+                error('Invalid relax factor');
+            end
+
+            if isempty(I)
+                S = [];
+            else
+                [lb, ub] = I.estimateRanges;           
+                % find all indexes having ub <= 0, then reset the
+                % values of the elements corresponding to these indexes to 0
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding all neurons (in %d neurons) with ub <= 0...', length(ub));
+                end
+                map1 = find(ub <= 0); % computation map
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
+                end
+                map2 = find(lb < 0 & ub > 0);
+                n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+
+                N = length(ub(map2));
+                lu = [ub(map2); abs(lb(map2))];
+                [~,midx] = sort(lu, 'descend');
+                midx1 = midx(1:2*n1); % neurons with optimized ranges
+                ub_idx = midx1(midx1 <= N); % neurons having upperbound optimized
+                lb_idx = midx1(midx1 > N) - N;  % neurons having lowerbound optimized
+                map21 = map2(ub_idx(:)); 
+                map22 = map2(lb_idx(:)); 
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize %d upper bounds of %d neurons: ', length(map21), length(map2));
+                end
+
+                if ~isempty(map21)
+                    xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
+                    map3 = find(xmax <= 0);
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\n%d neurons (in %d neurons) with ub <= 0 are found by optimizing ranges', length(map3), length(map21));
+                    end
+                    n = length(map3);
+                    map4 = zeros(n,1);
+                    for i=1:n
+                        map4(i) = map21(map3(i));
+                    end
+
+                    map5 = find(xmax > 0);
+                    map6 = map21(map5(:));
+                    map11 = [map1; map4];
+                else
+                    map11 = map1;
+                    map5 = [];
+                    map6 = [];
+                    map4 = [];
+                end
+                In = I.resetRow(map11); % reset to zero at the element having ub <= 0
+
+                if strcmp(dis_opt, 'display') && ~isempty(map21)
+                    fprintf('\n(%d+%d =%d)/%d neurons have ub <= 0', length(map1), length(map3), length(map11), length(ub));
+                end
+                
+                if ~isempty(map4) 
+                    map23 = setdiff(map22,map4, 'stable');
+                else
+                    map23 = map22;
+                end
+
+                % find all indexes that have lb < 0 & ub > 0, then
+                % apply the over-approximation rule for ReLU
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize %d lower bounds of %d neurons: ', length(map23), length(map2));
+                end
+                if ~isempty(map23)
+                    xmin = I.getMins(map23, option, dis_opt, lp_solver); 
+                    map7 = find(xmin < 0);
+                    map8 = map23(map7(:));
+                    map9 = find(xmin >= 0);
+                    map10 = map23(map9(:));
+                else
+                    map8 = [];
+                    map10 = [];
+                end
+
+                if ~isempty(map4)
+                    map24 = setdiff(map2,map4, 'stable');
+                else
+                    map24 = map2;
+                end
+
+                if ~isempty(map10)
+                    map24 = setdiff(map24,map10, 'stable');
+                end
+
+                if ~isempty(map6)
+                    ub(map6) = xmax(map5);
+                end
+                if ~isempty(map8)
+                    lb(map8) = xmin(map7);
+                end
+
+                ub1 = ub(map24);
+                lb1 = lb(map24);
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nConstruct new star set, %d new predicate variables are introduced', length(map24));
+                end
+                S = PosLin.multipleStepReachStarApprox_at_one(In, map24, lb1, ub1); % one-shot approximation
+
+            end
+
+        end
+
+        
+        
+        % a relaxed star-approx method using upper bound heuristic
+        % optimize ranges of neurons that have largest lower bounds and
+        % upper bounds
+        function S = reach_relaxed_star_ub(varargin)
+            % @I: star input set
+            % @relaxFactor: a relaxFactor
+            % @S: star output set
+
+            % author: Dung Tran
+            % date: 7/27/2020
+
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = 'single';
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 3
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 4
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'linprog';
+                case 5
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3, 4 or 5');
+            end
+
+            if ~isa(I, 'Star')
+                error('Input is not a star');
+            end
+            if relaxFactor < 0 || relaxFactor > 1
+                error('Invalid relax factor');
+            end
+
+            if isempty(I)
+                S = [];
+            else
+                [lb, ub] = I.estimateRanges;           
+                % find all indexes having ub <= 0, then reset the
+                % values of the elements corresponding to these indexes to 0
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding all neurons (in %d neurons) with ub <= 0...', length(ub));
+                end
+                map1 = find(ub <= 0); % computation map
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
+                end
+                map2 = find(lb < 0 & ub > 0);
+                n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+        
+                N = length(ub(map2));
+                [~,midx_u] = sort(ub(map2), 'descend');
+                [~, midx_l] = sort(abs(lb(map2)), 'descend');
+                if 2*n1 <= N
+                    ub_idx = midx_u(1:2*n1); 
+                    map21 = map2(ub_idx);
+                    map22 = [];
+                else
+                    ub_idx = midx_u(1:N);
+                    map21 = map2(ub_idx);
+                    lb_idx = midx_l(1:2*n1 - N);
+                    map22 = map2(lb_idx);                 
+                end              
+                
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize %d upper bounds of %d neurons: ', length(map21), length(map2));
+                end
+
+                if ~isempty(map21)
+                    xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
+                    map3 = find(xmax <= 0);
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\n%d neurons (in %d neurons) with ub <= 0 are found by optimizing ranges', length(map3), length(map21));
+                    end
+                    n = length(map3);
+                    map4 = zeros(n,1);
+                    for i=1:n
+                        map4(i) = map21(map3(i));
+                    end
+                    map5 = find(xmax > 0);
+                    map6 = map21(map5(:));
+                    map11 = [map1; map4];                    
+                else
+                    map11 = map1;
+                    map5 = [];
+                    map6 = [];
+                    map4 = [];
+                end
+                In = I.resetRow(map11); % reset to zero at the element having ub <= 0
+
+                if strcmp(dis_opt, 'display') && ~isempty(map21)
+                    fprintf('\n(%d+%d =%d)/%d neurons have ub <= 0', length(map1), length(map3), length(map11), length(ub));
+                end
+
+                if ~isempty(map22)
+                    if ~isempty(map4)
+                        map23 = setdiff(map22,map4, 'stable');
+                    else
+                        map23 = map22;
+                    end
+                else
+                    map23 = map22;
+                end
+                
+
+                % find all indexes that have lb < 0 & ub > 0, then
+                % apply the over-approximation rule for ReLU
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize %d lower bounds of %d neurons: ', length(map23), length(map2));
+                end
+                if ~isempty(map23)
+                    xmin = I.getMins(map23, option, dis_opt, lp_solver); 
+                    map7 = find(xmin < 0);
+                    map8 = map23(map7(:));
+                    map9 = find(xmin >= 0);
+                    map10 = map23(map9(:));
+                else
+                    map8 = [];
+                    map10 = [];
+                end
+
+                if ~isempty(map4)
+                    map24 = setdiff(map2, map4, 'stable');
+                else
+                    map24 = map2;
+                end
+
+                if ~isempty(map10)
+                    map24 = setdiff(map24, map10, 'stable');
+                end
+
+                if ~isempty(map6)
+                    ub(map6) = xmax(map5);
+                end
+                if ~isempty(map8)
+                    lb(map8) = xmin(map7);
+                end
+
+                ub1 = ub(map24);
+                lb1 = lb(map24);
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nConstruct new star set, %d new predicate variables are introduced', length(map24));
+                end
+                S = PosLin.multipleStepReachStarApprox_at_one(In, map24, lb1, ub1); % one-shot approximation
+
+            end
+
+        end
+        
+        % a relaxed star-approx method using random heuristic
+        % optimize ranges of randomly selected neurons
+        function S = reach_relaxed_star_random(varargin)
+            % @I: star input set
+            % @relaxFactor: a relaxFactor
+            % @S: star output set
+
+            % author: Dung Tran
+            % date: 7/29/2020
+
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = 'single';
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 3
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 4
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'linprog';
+                case 5
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3, 4 or 5');
+            end
+
+            if ~isa(I, 'Star')
+                error('Input is not a star');
+            end
+            if relaxFactor < 0 || relaxFactor > 1
+                error('Invalid relax factor');
+            end
+
+            if isempty(I)
+                S = [];
+            else
+                [lb, ub] = I.estimateRanges;           
+                % find all indexes having ub <= 0, then reset the
+                % values of the elements corresponding to these indexes to 0
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding all neurons (in %d neurons) with ub <= 0...', length(ub));
+                end
+                map1 = find(ub <= 0); % computation map
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
+                end
+                map2 = find(lb < 0 & ub > 0);
+                n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
+                end
+                
+                midx = randi([1 length(map2)], 1, n1);
+                
+                map21 = map2(midx(1:n1)); % neurons with optimized ranged
+                map22 = setdiff(map2, map21, 'stable');
+                lb1 = lb(map22);
+                ub1 = ub(map22); 
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize upper bounds of %d neurons: ', length(map21));
+                end
+                xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
+                map3 = find(xmax <= 0);
+
+                n = length(map3);
+                map4 = zeros(n,1);
+                for i=1:n
+                    map4(i) = map21(map3(i));
+                end
+                map11 = [map1; map4];
+                In = I.resetRow(map11); % reset to zero at the element having ub <= 0
+                
+                % find all indexes that have lb < 0 & ub > 0, then
+                % apply the over-approximation rule for ReLU
+                
+                map5 = find(xmax > 0);
+                map6 = map21(map5); % all indexes having ub > 0
+                xmax1 = xmax(map5); % upper bound of all neurons having ub > 0
+                
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize lower bounds of %d neurons: ', length(map6));
+                end
+                xmin = I.getMins(map6, option, dis_opt, lp_solver); 
+                map7 = find(xmin < 0); 
+                map8 = map6(map7); % all indexes having lb < 0 & ub > 0
+                lb2 = xmin(map7);  % lower bound of all indexes having lb < 0 & ub > 0
+                ub2 = xmax1(map7); % upper bound of all neurons having lb < 0 & ub > 0
+
+                map9 = [map22; map8];
+                lb3 = [lb1; lb2];
+                ub3 = [ub1; ub2];
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d/%d neurons have lb < 0 & ub > 0', length(map9), length(ub));
+                    fprintf('\nConstruct new star set, %d new predicate variables are introduced', length(map9));
+                end
+                S = PosLin.multipleStepReachStarApprox_at_one(In, map9, lb3, ub3); % one-shot approximation
+               
+            end
+
+        end
+        
+        % a relaxed star-approx method using static heuristic
+        % optimize ranges of the first n neurons
+        function S = reach_relaxed_star_static(varargin)
+            % @I: star input set
+            % @relaxFactor: a relaxFactor
+            % @S: star output set
+
+            % author: Dung Tran
+            % date: 8/6/2020
+
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = 'single';
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 3
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = [];
+                    lp_solver = 'linprog';
+                case 4
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'linprog';
+                case 5
+                    I = varargin{1};
+                    relaxFactor = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3, 4 or 5');
+            end
+
+            if ~isa(I, 'Star')
+                error('Input is not a star');
+            end
+            if relaxFactor < 0 || relaxFactor > 1
+                error('Invalid relax factor');
+            end
+
+            if isempty(I)
+                S = [];
+            else
+                [lb, ub] = I.estimateRanges;           
+                % find all indexes having ub <= 0, then reset the
+                % values of the elements corresponding to these indexes to 0
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding all neurons (in %d neurons) with ub <= 0...', length(ub));
+                end
+                map1 = find(ub <= 0); % computation map
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
+                end
+                map2 = find(lb < 0 & ub > 0);
+                n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
+                end
+                                
+                map21 = map2(1:n1); % neurons with optimized ranged
+                map22 = map2(n1+1:length(map2));
+                lb1 = lb(map22);
+                ub1 = ub(map22); 
+
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize upper bounds of %d neurons: ', length(map21));
+                end
+                xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
+                map3 = find(xmax <= 0);
+
+                n = length(map3);
+                map4 = zeros(n,1);
+                for i=1:n
+                    map4(i) = map21(map3(i));
+                end
+                map11 = [map1; map4];
+                In = I.resetRow(map11); % reset to zero at the element having ub <= 0
+                
+                % find all indexes that have lb < 0 & ub > 0, then
+                % apply the over-approximation rule for ReLU
+                
+                map5 = find(xmax > 0);
+                map6 = map21(map5); % all indexes having ub > 0
+                xmax1 = xmax(map5); % upper bound of all neurons having ub > 0
+                
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nOptimize lower bounds of %d neurons: ', length(map6));
+                end
+                xmin = I.getMins(map6, option, dis_opt, lp_solver); 
+                map7 = find(xmin < 0); 
+                map8 = map6(map7); % all indexes having lb < 0 & ub > 0
+                lb2 = xmin(map7);  % lower bound of all indexes having lb < 0 & ub > 0
+                ub2 = xmax1(map7); % upper bound of all neurons having lb < 0 & ub > 0
+
+                map9 = [map22; map8];
+                lb3 = [lb1; lb2];
+                ub3 = [ub1; ub2];
+                if strcmp(dis_opt, 'display')
+                    fprintf('\n%d/%d neurons have lb < 0 & ub > 0', length(map9), length(ub));
+                    fprintf('\nConstruct new star set, %d new predicate variables are introduced', length(map9));
+                end
+                S = PosLin.multipleStepReachStarApprox_at_one(In, map9, lb3, ub3); % one-shot approximation
+               
+            end
+
+        end
+        
     end
     
     
@@ -1385,39 +2052,33 @@ classdef PosLin
             
             
             if strcmp(method, 'exact-star') % exact analysis using star
-                
                 R = PosLin.reach_star_exact_multipleInputs(I, option, dis_opt, lp_solver);
-                
             elseif strcmp(method, 'exact-polyhedron') % exact analysis using polyhedron
-                
                 R = PosLin.reach_polyhedron_exact(I, option, dis_opt);
-                
             elseif strcmp(method, 'approx-star')  % over-approximate analysis using star
-                
-                if relaxFactor == 0
-                    R = PosLin.reach_star_approx2(I, option, dis_opt, lp_solver);
-                else
-                    R = PosLin.reach_relaxed_star_approx(I, relaxFactor, option, dis_opt, lp_solver);
-                end
-                
-            elseif strcmp(method, 'approx-zono')  % over-approximate analysis using zonotope
-                
+                R = PosLin.reach_star_approx2(I, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-dis')
+                R = PosLin.reach_relaxed_star_dis(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-lb-ub')
+                R = PosLin.reach_relaxed_star_lb_ub(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-area')
+                R = PosLin.reach_relaxed_star_area(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-ub')
+                R = PosLin.reach_relaxed_star_ub(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-random')
+                R = PosLin.reach_relaxed_star_random(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-static')
+                R = PosLin.reach_relaxed_star_static(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'approx-zono')  % over-approximate analysis using zonotope 
                 R = PosLin.reach_zono_approx(I, dis_opt);
-                
             elseif strcmp(method, 'abs-dom')  % over-approximate analysis using abstract-domain
-                
                 R = PosLin.reach_abstract_domain(I, dis_opt);
-                
             elseif strcmp(method, 'exact-face-latice') % exact analysis using face-latice
                 fprintf('\nNNV have not yet support Exact Face-Latice Method');
             elseif strcmp(method, 'approx-face-latice') % over-approximate analysis using face-latice
                 fprintf('\nNNV have not yet support Approximate Face-Latice Method');
             end
-            
-            
-            
-            
-              
+                            
         end
         
         

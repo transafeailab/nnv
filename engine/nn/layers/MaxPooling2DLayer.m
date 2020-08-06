@@ -1084,7 +1084,7 @@ classdef MaxPooling2DLayer < handle
                     error('Invalid number of input arguments (should be 2, 3 or 4)');
             end
             
-            if strcmp(method, 'approx-star')
+            if strcmp(method, 'approx-star') || contains(method, 'relax-star')
                 IS = obj.reach_star_approx_multipleInputs(in_images, option, dis_opt, lp_solver);
             elseif strcmp(method, 'exact-star')
                 IS = obj.reach_star_exact_multipleInputs(in_images, option, dis_opt, lp_solver);
@@ -1094,6 +1094,8 @@ classdef MaxPooling2DLayer < handle
                 IS = obj.reach_star_approx_multipleInputs(in_images, option, dis_opt, lp_solver);
             elseif strcmp(method, 'approx-zono')
                 IS = obj.reach_zono_multipleInputs(in_images, option);
+            else
+                error("Unknown reachability method");
             end
    
             

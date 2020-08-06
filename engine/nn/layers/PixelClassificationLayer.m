@@ -235,7 +235,7 @@ classdef PixelClassificationLayer < handle
                     error('Invalid number of input arguments, should be 1, 2, 3 or 4');
             end
          
-            if strcmp(method, 'approx-star') || strcmp(method, 'exact-star') || strcmp(method, 'abs-dom')
+            if strcmp(method, 'approx-star') || strcmp(method, 'exact-star') || strcmp(method, 'abs-dom') || constains(method, 'relax-star')
                 seg_ims_ids = obj.reach_star_multipleInputs(in_images, option);
             elseif strcmp(method, 'approx-zono') 
                 error('NNV have not support approx-zono method yet');
