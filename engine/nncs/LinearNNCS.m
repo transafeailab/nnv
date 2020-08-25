@@ -188,7 +188,6 @@ classdef LinearNNCS < handle
                     obj.plantReachSet{k} = X;
                 
                 elseif strcmp(obj.method, 'approx-star')
-                    
                     B = Star.get_hypercube_hull(X);
                     obj.plantReachSet{k} = B.toStar; % combine all stars into a single over-approximate star
                     
@@ -491,6 +490,7 @@ classdef LinearNNCS < handle
                  obj.plantIntermediateReachSet{k} = cell(1,1);
                  obj.plantIntermediateReachSet{k}{1,1} = {X_imd};
                  X = X_imd(obj.plantNumOfSimSteps+1);
+          
             end
             
             if k>1

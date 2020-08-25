@@ -850,13 +850,16 @@ classdef PosLin
                         fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
                     end
                     map2 = find(lb < 0 & ub > 0);
+                    display(length(map2));
                     n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+                    display(n1);
                     if strcmp(dis_opt, 'display')
                         fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
                     end
                     [~,midx] = sort(ub(map2)-lb(map2), 'descend');
                     map21 = map2(midx(1:n1)); % neurons with optimized ranged
                     map22 = map2(midx(n1+1:length(map2))); % neurons without optimized ranges
+                    display(length(map22));
                     lb1 = lb(map22);
                     ub1 = ub(map22); 
                     
@@ -965,7 +968,9 @@ classdef PosLin
                     fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
                 end
                 map2 = find(lb < 0 & ub > 0);
+                display(length(map2));
                 n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
+                display(n1);
                 if strcmp(dis_opt, 'display')
                     fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
                 end
@@ -1404,9 +1409,10 @@ classdef PosLin
                 if strcmp(dis_opt, 'display')
                     fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
                 end
-                
-                midx = randi([1 length(map2)], 1, n1);
-                
+
+                midx = randperm(length(map2), n1);
+                midx = midx';
+
                 map21 = map2(midx(1:n1)); % neurons with optimized ranged
                 map22 = setdiff(map2, map21, 'stable');
                 lb1 = lb(map22);
@@ -1441,7 +1447,7 @@ classdef PosLin
                 map8 = map6(map7); % all indexes having lb < 0 & ub > 0
                 lb2 = xmin(map7);  % lower bound of all indexes having lb < 0 & ub > 0
                 ub2 = xmax1(map7); % upper bound of all neurons having lb < 0 & ub > 0
-
+                
                 map9 = [map22; map8];
                 lb3 = [lb1; lb2];
                 ub3 = [ub1; ub2];
