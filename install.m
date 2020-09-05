@@ -33,10 +33,12 @@ tbxmanager restorepath
 
 fprintf('\nAdding NNV to Matlab path...\n');
 mydir  = pwd;
-idcs   = strfind(mydir,filesep);
-newdir = mydir(1:idcs(end)-1);
-p = genpath(newdir); % generate a path that includes NNV folder and all folders below it
-addpath(p);
+%idcs   = strfind(mydir,filesep);
+%newdir = mydir(1:idcs(end)-1);
+%p = genpath(newdir); % generate a path that includes NNV folder and all folders below it
+%addpath(p);
+addpath(genpath(mydir))
+
 
 fprintf('\nInstalling NNV is done, it is ready to use.');
 fprintf('\nPlease go to examples or test folders to run case studies and test examples.');
