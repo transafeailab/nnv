@@ -1011,7 +1011,6 @@ classdef Star
                     end
                     
                 else
-                    display(lp_solver);
                     error('Unknown lp solver, should be glpk or linprog'); 
                 end
 
