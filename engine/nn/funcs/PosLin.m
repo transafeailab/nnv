@@ -1593,7 +1593,7 @@ classdef PosLin
             elseif xmax < 0 
                 Im = eye(dim);
                 Im(index, index) = 0;
-                R = I.affineMap(Im, 'vrep');
+                R = Im*I;
             elseif xmin < 0 && xmax >= 0
                 
                 Z1 = zeros(1, dim);
@@ -1609,7 +1609,7 @@ classdef PosLin
                 
                 Im = eye(dim);
                 Im(index, index) = 0;
-                R1 = R1.affineMap(Im, 'vrep');
+                R1 = Im*R1;
                 if R1.isEmptySet 
                     if R2.isEmptySet
                         R = [];

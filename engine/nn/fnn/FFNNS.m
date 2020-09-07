@@ -376,6 +376,38 @@ classdef FFNNS < handle
             % update: 3/15/2020
             
             switch nargin
+                
+                case 2
+                    obj = varargin{1};
+                    if ~isstruct(varargin{2})
+                        obj.inputSet = varargin{2};
+                        obj.reachMethod = 'exact-star';
+                        obj.numCores = 1;
+                    else
+                        if isfield(varargin{2}, 'inputSet')
+                            obj.inputSet = varargin{2}.inputSet;
+                        end
+                        if isfield(varargin{2}, 'unsafeRegion')
+                            obj.unsafeRegion = varargin{2}.unsafeRegion;
+                        end
+                        if isfield(varargin{2}, 'numCores')
+                            obj.numCores = varargin{2}.numCores;
+                        end
+                        if isfield(varargin{2}, 'reachMethod')
+                            obj.reachMethod = varargin{2}.reachMethod;
+                        end
+                        if isfield(varargin{2}, 'dis_opt')
+                            obj.dis_opt = varargin{2}.dis_opt;
+                        end
+                        if isfield(varargin{2}, 'relaxFactor')
+                            obj.relaxFactor = varargin{2}.relaxFactor;
+                        end
+                        if isfield(varargin{2}, 'lp_solver')
+                            obj.lp_solver = varargin{2}.lp_solver;
+                        end
+                        
+                    end   
+                    
                 case 3
                     obj = varargin{1};
                     obj.inputSet = varargin{2};
@@ -460,33 +492,47 @@ classdef FFNNS < handle
                             safe = 0;
                         end
                     else
+                        
                         safe = 1;
                         for i=1:n
-                            if ~isempty(R(i).intersectHalfSpace(obj.unsafeRegion.G, obj.unsafeRegion.g))
-                                if obj.getCounterExs
+                            R1 = Star(R(i));
+                            if ~isempty(R1.intersectHalfSpace(obj.unsafeRegion.G, obj.unsafeRegion.g))
+                                if obj.getCounterExs && strcmp(obj.reachMethod, 'exact-star')
                                     counterExamples = [counterExamples Star(obj.inputSet.V, R(i).C, R(i).d, R(i).predicate_lb, R(i).predicate_ub)];
                                 else
                                     safe = 0;
                                     break;
                                 end
-                                
+
                             end
                         end
                     end
-                    
-                    
-                    
-                    
+                     
                 else
-                    if strcmp(obj.reachMethod, 'zono')
-                        R = R.toStar;
+                    safe = 1;
+                    if ~strcmp(obj.reachMethod, 'exact-polyhedron')
+                        if strcmp(obj.reachMethod, 'approx-zono')
+                            R = R.toStar;
+                        end
+                        if isempty(R.intersectHalfSpace(obj.unsafeRegion.G, obj.unsafeRegion.g))
+                            safe = 1;
+                        else
+                            safe = 2;
+                        end
+                    else
+                        
+                        n = length(R);
+                        for i=1:n
+                            R1 = Star(R(i));
+                            if ~isempty(R1.intersectHalfSpace(obj.unsafeRegion.G, obj.unsafeRegion.g))
+                                safe = 0;
+                                break;
+                            end
+                        end
+                        
                     end
                     
-                    if isempty(R.intersectHalfSpace(obj.unsafeRegion.G, obj.unsafeRegion.g))
-                        safe = 1;
-                    else
-                        safe = 2;
-                    end
+                    
                     
                 end
                 

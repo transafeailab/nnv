@@ -243,7 +243,23 @@ classdef Star
                     obj.predicate_lb = -ones(S.nVar, 1);
                     obj.predicate_ub = ones(S.nVar, 1);
                     obj.Z = B.toZono;
+                 
+                case 1 % accept a polyhedron as an input and transform to a star
+                    I = varargin{1};
+                    if ~isa(I, 'Polyhedron')
+                        error('Input set is not a polyhedron');
+                    end
                     
+                    c = zeros(I.Dim, 1);
+                    V1 = eye(I.Dim);
+                    V = [c V1];
+                    if isempty(I.Ae)    
+                        obj = Star(V, I.A, I.b);
+                    else
+                        A1 = [I.Ae; -I.Ae];
+                        b1 = [I.be; -I.be];
+                        obj = Star(V, [I.A; A1], [I.b; b1]);
+                    end
                 
                 case 0
                     % create empty Star (for preallocation an array of star)
@@ -652,10 +668,16 @@ classdef Star
             
             b = obj.V(:, 1);        
             W = obj.V(:, 2:obj.nVar + 1);
-            C1 = [eye(obj.nVar); -eye(obj.nVar)];
-            d1 = [obj.predicate_ub; -obj.predicate_lb];
-            Pa = Polyhedron('A', [obj.C;C1], 'b', [obj.d;d1]);
-            P = Pa.affineMap(W) + b;
+            
+            if ~isempty(obj.predicate_ub)
+                C1 = [eye(obj.nVar); -eye(obj.nVar)];
+                d1 = [obj.predicate_ub; -obj.predicate_lb];
+                Pa = Polyhedron('A', [obj.C;C1], 'b', [obj.d;d1]);
+                P = W*Pa + b;
+            else
+                Pa = Polyhedron('A', [obj.C], 'b', [obj.d]);
+                P = W*Pa + b;
+            end
         end
         
         % convert to ImageStar set
@@ -1558,7 +1580,7 @@ classdef Star
                     
                 case 1
                     S = varargin{1};
-                    color = 'blue';
+                    color = 'b';
                     
                 otherwise
                     error('Invalid number of inputs, should be 1 or 2');
