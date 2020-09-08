@@ -33,7 +33,7 @@ classdef FFNNS < handle
         Operations = []; % flatten a network into a sequence of operations
         
         dis_opt = []; % display option
-        lp_solver = 'linprog'; % lp solver option, should be glpk or linprog
+        lp_solver = 'glpk'; % lp solver option, should be glpk or linprog
         
     end
     
@@ -262,6 +262,7 @@ classdef FFNNS < handle
                         obj.reachMethod = 'exact-star';
                         obj.numCores = 1;
                     else
+                        fprintf('\nHi')
                         if isfield(varargin{2}, 'inputSet')
                             obj.inputSet = varargin{2}.inputSet;
                         end
@@ -282,8 +283,7 @@ classdef FFNNS < handle
                         end
                         
                     end   
-                        
-                    
+                
                 otherwise
                     error('Invalid number of input arguments (should be 1, 2, 3, 4, 5, or 6)');
             end
@@ -324,7 +324,7 @@ classdef FFNNS < handle
                 In = obj.Layers(i).reach(In, obj.reachMethod, obj.reachOption, obj.relaxFactor, obj.dis_opt, obj.lp_solver);
                 t1 = toc(st);
                 
-                %obj.reachSet{1, i} = In;
+                % obj.reachSet{1, i} = In;
                 obj.numReachSet(i) = length(In);
                 obj.reachTime = [obj.reachTime t1];
                 

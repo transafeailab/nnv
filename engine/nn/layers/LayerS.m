@@ -151,7 +151,7 @@ classdef LayerS
                     if ~isa(I(i), 'Polyhedron')
                         I1 = I(i).affineMap(W1, b1);
                     else
-                        I1 = I(i).affineMap(W1) + b1;
+                        I1 = W1*I(i) + b1;
                     end
                     % apply activation function: y' = ReLU(y) or y' = 
 
@@ -182,7 +182,7 @@ classdef LayerS
                 for i=1:n
                     % affine mapping y = Wx + b;                     
                     if isa(I(i), 'Polyhedron')
-                        I1 = I(i).affineMap(W1) + b1;
+                        I1 = W1*I(i) + b1;
                     else                        
                         I1 = I(i).affineMap(W1, b1);
                     end

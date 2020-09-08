@@ -17,7 +17,7 @@ I will update the user manual frequently.
 
     1) Install Matlab with at least the following toolboxes:
        Control Systems
-       Optimization
+       Optimization (need to be installed)
        Parallel Processing
        Deep Learning
        System Identification
