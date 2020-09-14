@@ -397,8 +397,7 @@ classdef NonlinearNNCS < handle
                     obj.controlTrace = [obj.controlTrace u]; % store control input to controlTrace
                 end
                                
-            end
-            obj.simTrace = [x0 obj.simTrace]; % add initial state to simtrace            
+            end         
             simTrace = obj.simTrace;
             controlTrace = obj.controlTrace;
             
