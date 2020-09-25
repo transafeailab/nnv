@@ -1330,11 +1330,11 @@ methods(Static) % main reach method
 
         elseif strcmp(method, 'approx-zono')  % over-approximate analysis using zonotope
 
-            R = TanSig.reach_zono_approx(I, dis_opt);
+            R = TanSig.reach_zono_approx(I);
 
         elseif strcmp(method, 'abs-dom')  % over-approximate analysis using abstract-domain
 
-            R = TanSig.reach_absdom_approx(I, dis_opt);
+            R = TanSig.reach_absdom_approx(I);
 
         else
             error('Unknown or unsupported reachability method for layer with LogSig activation function');

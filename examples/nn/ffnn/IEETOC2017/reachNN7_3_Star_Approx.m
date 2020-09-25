@@ -21,6 +21,8 @@ ub = -lb;
 I = Star(lb, ub);
 %[R1, t1] = F.reach(I, 'exact-star',4); % exact reachable set
 [R2, t2] = F.reach(I, 'approx-star'); % over-approximate reach set using stars
+[R3, t3] = F.reach(I, 'approx-zono'); % over-approximate reachable set using zonotope
+[R4, t4] = F.reach(I, 'abs-dom'); % over-approximate reachable set using absdom
 
 
 

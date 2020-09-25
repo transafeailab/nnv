@@ -1860,8 +1860,8 @@ classdef PosLin
                 case 2
                     I = varargin{1};
                     index = varargin{2};
-                    %[lb, ub] = I.getRange(index); % our improved approach
-                    [lb, ub] = I.estimateRange(index); % originial DeepPoly approach use estimated range
+                    [lb, ub] = I.getRange(index); % our improved approach
+                    %[lb, ub] = I.estimateRange(index); % originial DeepPoly approach use estimated range
                 otherwise
                     error('Invalid number of input arguments (should be 2 or 4)');
             end
@@ -1956,7 +1956,8 @@ classdef PosLin
             if isempty(I)
                 S = [];
             else    
-                [lb, ub] = I.estimateRanges;
+                %[lb, ub] = I.estimateRanges;
+                [lb, ub] = I.getRanges(); % get tightest ranges from LP optimization
                 if isempty(lb) || isempty(ub)
                     S = [];
                 else

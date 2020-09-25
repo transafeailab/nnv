@@ -1291,7 +1291,7 @@ classdef Star
                 lb = zeros(n,1);
                 ub = zeros(n,1);
                 for i=1:n
-                    fprintf('\nGet range at index %d', i);
+                    % fprintf('\nGet range at index %d', i);
                     [lb(i), ub(i)] = obj.getRange(i);
                 end
             else
