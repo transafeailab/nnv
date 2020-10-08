@@ -49,7 +49,7 @@ classdef LogSig
                     method = varargin{2};
                     reachOption = varargin{3};
                     relaxFactor = varargin{4};
-                    dis_opt = varargin{4};
+                    dis_opt = [];
                     lp_solver = 'linprog';
                 case 5
                     I = varargin{1};
@@ -72,7 +72,7 @@ classdef LogSig
             if ~isa(I, 'Star')
                 error('Input set is not a star set');
             end
-            
+           
             if strcmp(method, 'approx-star-no-split') || strcmp(method, 'approx-star')
                 if relaxFactor == 0
                     S = LogSig.reach_star_approx_no_split(I, dis_opt, lp_solver);
@@ -864,7 +864,6 @@ classdef LogSig
             if ~isa(I, 'Star')
                 error('Input is not a star');
             end
-            display(relaxFactor);
             if (relaxFactor < 0) || (relaxFactor > 1)
                 error('Invalid relax factor');
             end

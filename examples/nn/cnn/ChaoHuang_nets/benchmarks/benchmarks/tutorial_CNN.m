@@ -22,6 +22,7 @@ IS = ImageStar(lb, ub);
 %% Verify the robustness under l-infinity norm attack
 correct_id = 8;
 numCore = 1;
+nnvNet.dis_opt = 'display';
 [rb, cE, cands, vt] = nnvNet.verifyRBN(IS, 8, 'approx-star', 1);
 
 %% plot output ranges

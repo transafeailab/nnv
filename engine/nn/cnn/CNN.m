@@ -67,7 +67,7 @@ classdef CNN < handle
         
         % Evaluation of a CNN
         function y = evaluate(obj, x)
-            % Evaluation of this FFNN
+            % Evaluation of this CNN
             % @x: input vector x
             % @y: output vector y
             % @features: output of all layers

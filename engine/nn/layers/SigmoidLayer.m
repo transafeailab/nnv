@@ -110,7 +110,7 @@ classdef SigmoidLayer < handle
             w = in_image.width;
             c = in_image.numChannel;
                         
-            Y = LogSig.reach(in_image.toStar, method, relaxFactor, dis_opt, lp_solver); % reachable set computation with ReLU
+            Y = LogSig.reach(in_image.toStar, method, [], relaxFactor, dis_opt, lp_solver); % reachable set computation with ReLU
             n = length(Y);
             images(n) = ImageStar;
             % transform back to ImageStar
