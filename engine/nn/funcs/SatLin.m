@@ -36,7 +36,7 @@ classdef SatLin
             d1 = [I.d; -d0];
             V1 = I.V;
             V1(index, :) = zeros(1, I.nVar + 1);
-            S1 = Star(V1, C1, d1);
+            S1 = Star(V1, C1, d1, I.predicate_lb, I.predicate_ub);
             if S1.isEmptySet
                 S1 = [];
             end
@@ -45,7 +45,7 @@ classdef SatLin
             V2 = I.V;
             C2 = [I.C; C0; -C0];
             d2 = [I.d; 1-d0; d0];
-            S2 = Star(V2, C2, d2);
+            S2 = Star(V2, C2, d2, I.predicate_lb, I.predicate_ub);
             if S2.isEmptySet
                 S2 = [];
             end
@@ -56,7 +56,7 @@ classdef SatLin
             V3 = I.V;
             V3(index, 1) = 1;
             V3(index, 2:I.nVar + 1) = zeros(1, I.nVar);
-            S3 = Star(V3, C3, d3);
+            S3 = Star(V3, C3, d3, I.predicate_lb, I.predicate_ub);
             if S3.isEmptySet
                 S3 = [];
             end
@@ -159,13 +159,13 @@ classdef SatLin
             if ub <= 0
                 V = I.V;
                 V(index, :) = zeros(1, I.nVar + 1);
-                S = Star(V, I.C, I.d);
+                S = Star(V, I.C, I.d, I.predicate_lb, I.predicate_ub);
             end
             if lb >= 1
                 V = I.V;
                 V(index, :) = zeros(1, I.nVar + 1);
                 V(index, 1) = 1;
-                S = Star(V, I.C, I.d);                
+                S = Star(V, I.C, I.d, I.predicate_lb, I.predicate_ub);                
             end
             if (1 > lb) && (lb > 0) && ub > 1
                 % constraint 1: y(index) <= x[index]
@@ -175,9 +175,11 @@ classdef SatLin
                 C2 = zeros(1, I.nVar + 1);
                 C2(I.nVar + 1) = 1;
                 d2 = 1;
-                % constraint 3: y[index] >= (1-lb)x/(ub-lb) + lb*(ub-1)/(ub-lb)
-                C3 = [((1-lb)/(ub-lb))*I.V(index, 2:I.nVar+1) -1];
-                d3 = -lb*(ub-1)/(ub-lb) - (1-lb)*I.V(index,1)/(ub-lb);
+                % constraint 3: y[index] >= ((1-lb)/(ub-lb))(x-lb) + lb
+                a = (1-lb)/(ub-lb);
+                C3 = [a*I.V(index, 2:I.nVar+1) -1];
+                d3 = -lb + a*lb - a*I.V(index,1);
+                
                 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];
@@ -187,12 +189,14 @@ classdef SatLin
                 new_V = [I.V zeros(I.dim, 1)];
                 new_V(index, :) = zeros(1, I.nVar+2);
                 new_V(index, I.nVar+2) = 1;
-
-                S = Star(new_V, new_C, new_d);
+                new_lb = [I.predicate_lb; lb];
+                new_ub = [I.predicate_ub; 1];
+                
+                S = Star(new_V, new_C, new_d, new_lb, new_ub);
             end
             
             if lb >= 0 && ub <= 1
-                S = Star(I.V, I.C, I.d);
+                S = Star(I.V, I.C, I.d, I.predicate_lb, I.predicate_ub);
             end
             if lb < 0 && (0 < ub) && (ub <= 1)
                 
@@ -217,8 +221,10 @@ classdef SatLin
                 new_V = [I.V zeros(I.dim, 1)];
                 new_V(index, :) = zeros(1, n+1);
                 new_V(index, n+1) = 1;
+                new_lb = [I.predicate_lb; 0];
+                new_ub = [I.predicate_ub; ub];
 
-                S = Star(new_V, new_C, new_d);               
+                S = Star(new_V, new_C, new_d, new_lb, new_ub);               
             end
             
             if lb < 0 && ub > 1
@@ -246,8 +252,10 @@ classdef SatLin
                 new_V = [I.V zeros(I.dim, 1)];
                 new_V(index, :) = zeros(1, n+1);
                 new_V(index, n+1) = 1;
+                new_lb = [I.predicate_lb; 0];
+                new_ub = [I.predicate_ub; 1];
 
-                S = Star(new_V, new_C, new_d); 
+                S = Star(new_V, new_C, new_d, new_lb, new_ub); 
                 
             end
                  

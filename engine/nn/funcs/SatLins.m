@@ -37,7 +37,7 @@ classdef SatLins
             V1 = I.V;
             V1(index, :) = zeros(1, I.nVar + 1);
             V1(index, 1) = -1;
-            S1 = Star(V1, C1, d1);
+            S1 = Star(V1, C1, d1, I.predicate_lb, I.predicate_ub);
             if S1.isEmptySet
                 S1 = [];
             end
@@ -57,7 +57,7 @@ classdef SatLins
             V3 = I.V;
             V3(index, 1) = 1;
             V3(index, 2:I.nVar + 1) = zeros(1, I.nVar);
-            S3 = Star(V3, C3, d3);
+            S3 = Star(V3, C3, d3, I.predicate_lb, I.predicate_ub);
             if S3.isEmptySet
                 S3 = [];
             end
@@ -183,9 +183,10 @@ classdef SatLins
                 C2 = zeros(1, I.nVar + 1);
                 C2(I.nVar + 1) = 1;
                 d2 = 1;
-                % constraint 3: y[index] >= (1-lb)x/(ub-lb) + lb*(ub-1)/(ub-lb)
-                C3 = [((1-lb)/(ub-lb))*I.V(index, 2:I.nVar+1) -1];
-                d3 = -lb*(ub-1)/(ub-lb) - (1-lb)*I.V(index,1)/(ub-lb);
+                % constraint 3: y[index] >= ((1-lb)/(ub-lb))(x-lb) + lb
+                a = (1-lb)/(ub-lb);
+                C3 = [a*I.V(index, 2:I.nVar+1) -1];
+                d3 = -lb + a*lb - a*I.V(index,1);
                 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];

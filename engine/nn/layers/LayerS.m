@@ -10,6 +10,7 @@ classdef LayerS
         b; % bias vector 
         f; % activation function;
         N; % number of neurons
+        gamma = 0; % used only for leakyReLU layer
         
         option = []; % parallel option, 'parallel' or []
         dis_opt = []; % display option, 'display' or []
@@ -19,7 +20,23 @@ classdef LayerS
     
     methods % constructor - evaluation - sampling
         % Constructor
-        function obj = LayerS(W, b, f)
+        function obj = LayerS(varargin)
+            
+            switch nargin
+                case 3
+                    W = varargin{1};
+                    b = varargin{2};
+                    f = varargin{3};
+                    gamma = 0;
+                case 4
+                    W = varargin{1};
+                    b = varargin{2};
+                    f = varargin{3};
+                    gamma = varargin{4};
+                otherwise
+                    error('Invalid number of input arguments, should be 3 or 4');
+            end
+            
             if size(W, 1) == size(b, 1)
                 obj.W = double(W);
                 obj.b = double(b);
@@ -27,8 +44,13 @@ classdef LayerS
             else
                 error('Inconsistent dimensions between Weights matrix and bias vector');
             end
+            
+            if gamma >= 1
+                error('Invalid parameter for leakyReLU, gamma should be <= 1');
+            end
                 
             obj.f = f;
+            obj.gamma = gamma;
                
         end
         
@@ -55,6 +77,11 @@ classdef LayerS
                 y = y1;
             elseif strcmp(obj.f, 'softmax')
                 y = softmax(y1);
+            elseif strcmp(obj.f, 'leakyReLU')
+                y = y1;
+                y(find(y < 0)) = obj.gamma*y(find(y<0));
+            else
+                error('Unknown or unsupported activation function');
             end 
 
         end
