@@ -545,20 +545,25 @@ classdef SatLin
             if ~isa(I, 'Star')
                 error('Input is not a Star');
             end
-               
-            [lb, ub] = I.getRange(index);
             
+            lb = I.getMin(index);
+            ub = I.getMax(index);
+            
+            % case 1)
             if ub <= 0
                 V = I.V;
                 V(index, :) = zeros(1, I.nVar + 1);
-                S = Star(V, I.C, I.d);
+                S = Star(V, I.C, I.d, I.predicate_lb, I.predicate_ub);
             end
+            % case 2)
             if lb >= 1
                 V = I.V;
                 V(index, :) = zeros(1, I.nVar + 1);
                 V(index, 1) = 1;
-                S = Star(V, I.C, I.d);                
+                S = Star(V, I.C, I.d, I.predicate_lb, I.predicate_ub);                
             end
+            
+            % case 3)
             if (1 > lb) && (lb > 0) && ub > 1
                 % constraint 1: y(index) <= x[index]
                 C1 = [-I.V(index, 2:I.nVar + 1) 1];
@@ -567,9 +572,10 @@ classdef SatLin
                 C2 = zeros(1, I.nVar + 1);
                 C2(I.nVar + 1) = 1;
                 d2 = 1;
-                % constraint 3: y[index] >= (1-lb)x/(ub-lb) + lb*(ub-1)/(ub-lb)
-                C3 = [((1-lb)/(ub-lb))*I.V(index, 2:I.nVar+1) -1];
-                d3 = -lb*(ub-1)/(ub-lb) - (1-lb)*I.V(index,1)/(ub-lb);
+                % constraint 3: y[index] >= ((1-lb)/(ub-lb))(x-lb) + lb
+                a = (1-lb)/(ub-lb);
+                C3 = [a*I.V(index, 2:I.nVar+1) -1];
+                d3 = -lb + a*lb - a*I.V(index,1);
                 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];
@@ -585,18 +591,25 @@ classdef SatLin
                     % get first cadidate as resulted abstract-domain
                     new_C = [C0; C2; C3];
                     new_d = [d0; d2; d3];
+                    new_lb = [I.predicate_lb; lb];
+                    new_ub = [I.predicate_ub; 1];
                 else
                     % get second candidate as resulted abstract-domain
                     new_C = [C0; C1; C3];
                     new_d = [d0; d1; d3];
+                    new_lb = [I.predicate_lb; lb];
+                    new_ub = [I.predicate_ub; ub];
                 end
 
-                S = Star(new_V, new_C, new_d);
+                S = Star(new_V, new_C, new_d, new_lb, new_ub);
             end
             
+            % case 4)
             if lb >= 0 && ub <= 1
-                S = Star(I.V, I.C, I.d);
+                S = Star(I.V, I.C, I.d, I.predicate_lb, I.predicate_ub);
             end
+            
+            % case 5)
             if lb < 0 && (0 < ub) && (ub <= 1)
                 
                 n = I.nVar + 1;
@@ -609,8 +622,9 @@ classdef SatLin
                 C2 = [I.V(index, 2:n) -1];
                 d2 = -I.V(index, 1);
                 % constraint 3: y[index] <= ub(x[index] -lb)/(ub - lb)
-                C3 = [-(ub/(ub-lb))*I.V(index, 2:n) 1];
-                d3 = -(ub*lb/(ub-lb))*(1 - I.V(index, 1));
+                a = ub/(ub-lb);
+                C3 = [-a*I.V(index, 2:n) 1];
+                d3 = - a*lb + a*I.V(index, 1);
 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];
@@ -627,13 +641,17 @@ classdef SatLin
                     % get first cadidate as resulted abstract-domain
                     new_C = [C0; C1; C3];
                     new_d = [d0; d1; d3];
+                    new_lb = [I.predicate_lb; 0];
+                    new_ub = [I.predicate_ub; ub];
                 else
                     % get second candidate as resulted abstract-domain
                     new_C = [C0; C2; C3];
                     new_d = [d0; d2; d3];
+                    new_lb = [I.predicate_lb; lb];
+                    new_ub = [I.predicate_ub; ub];
                 end
 
-                S = Star(new_V, new_C, new_d);               
+                S = Star(new_V, new_C, new_d, new_lb, new_ub);               
             end
             
             if lb < 0 && ub > 1
@@ -647,8 +665,9 @@ classdef SatLin
                 C2(n) = 1;
                 d2 = 1;
                 % constraint 3: y[index] <= x/(1 -lb) - lb/(1-lb)
-                C3 = [(-1/(1-lb))*I.V(index, 2:n) 1];
-                d3 = (1/(1-lb))*I.V(index, 1) - lb/(1-lb);
+                a = 1/(1-lb);
+                C3 = [-a*I.V(index, 2:n) 1];
+                d3 = a*I.V(index, 1) - a*lb;
                 % constraint 4: y[index] >=  x/ub
                 C4 = [(1/ub)*I.V(index, 2:n) -1];
                 d4 = -(1/ub)*I.V(index, 1);
@@ -660,20 +679,24 @@ classdef SatLin
                 new_V(index, :) = zeros(1, n+1);
                 new_V(index, n+1) = 1;
                 
-                S1 = (ub-lb)*(ub-lb)/(2*(1-lb)); % area of the first candidate abstract domain
-                S2 = (1 - lb/ub)*(ub-lb)/2; % area of the second candidate abstract domain
+                S1 = (ub-lb)*(1 + (ub-lb)/(1-lb)); % area of the first candidate abstract domain
+                S2 = (1 - lb/ub)*(ub-lb); % area of the second candidate abstract domain
                 
                 if S1 < S2
                     % get first cadidate as resulted abstract-domain
                     new_C = [C0; C1; C3];
                     new_d = [d0; d1; d3];
+                    new_lb = [I.predicate_lb; 0];
+                    new_ub = [I.predicate_ub; (ub-lb)/(1-lb)];
                 else
                     % get second candidate as resulted abstract-domain
                     new_C = [C0; C2; C4];
                     new_d = [d0; d2; d4];
+                    new_lb = [I.predicate_lb; lb/ub];
+                    new_ub = [I.predicate_ub; 1];
                 end
                 
-                S = Star(new_V, new_C, new_d); 
+                S = Star(new_V, new_C, new_d, new_lb, new_ub); 
                 
             end
                        

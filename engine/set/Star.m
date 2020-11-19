@@ -941,18 +941,18 @@ classdef Star
                 xmax = obj.V(index,1);
             else
                 % **** linprog is much faster than glpk
-                options = optimoptions(@linprog, 'Display','none'); 
-                options.OptimalityTolerance = 1e-10; % set tolerance
-                [~, fval, exitflag, ~] = linprog(f, obj.C, obj.d, [], [], obj.predicate_lb, obj.predicate_ub, options);             
-%                 [~, fval, exitflag, ~] = glpk(f, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub);
+                %options = optimoptions(@linprog, 'Display','none'); 
+                %options.OptimalityTolerance = 1e-10; % set tolerance
+                %[~, fval, exitflag, ~] = linprog(f, obj.C, obj.d, [], [], obj.predicate_lb, obj.predicate_ub, options);             
+                [~, fval, exitflag, ~] = glpk(f, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub);
                 if exitflag > 0
                     xmin = fval + obj.V(index, 1);
                 else
                     error('Cannot find an optimal solution, exitflag = %d', exitflag);
                 end          
           
-                [~, fval, exitflag, ~] = linprog(-f, obj.C, obj.d, [], [], obj.predicate_lb, obj.predicate_ub, options);   
-                %[~, fval, exitflag, ~] = glpk(-f, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub);
+                %[~, fval, exitflag, ~] = linprog(-f, obj.C, obj.d, [], [], obj.predicate_lb, obj.predicate_ub, options);   
+                [~, fval, exitflag, ~] = glpk(-f, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub);
                 if exitflag > 0
                     xmax = -fval + obj.V(index, 1);
                 else
@@ -976,7 +976,7 @@ classdef Star
                 case 2
                     obj = varargin{1};
                     index = varargin{2};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     obj = varargin{1};
                     index = varargin{2};
@@ -987,7 +987,7 @@ classdef Star
             
             if index < 1 || index > obj.dim
                 error('Invalid index');
-            end   
+            end 
             
             f = obj.V(index, 2:obj.nVar + 1);
             if all(f(:)==0)
@@ -1039,19 +1039,19 @@ classdef Star
                     map = varargin{2};
                     par_option = varargin{3};
                     dis_option = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     obj = varargin{1};
                     map = varargin{2};
                     par_option = varargin{3};
                     dis_option = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 2
                     obj = varargin{1};
                     map = varargin{2}; 
                     par_option = 'single';
                     dis_option = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 otherwise
                     error('Invalid number of inputs, should be 1, 2, 3, or 4');
             end
@@ -1123,7 +1123,7 @@ classdef Star
                 case 2
                     obj = varargin{1};
                     index = varargin{2};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     obj = varargin{1};
                     index = varargin{2};
@@ -1186,19 +1186,19 @@ classdef Star
                     map = varargin{2};
                     par_option = varargin{3};
                     dis_option = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     obj = varargin{1};
                     map = varargin{2};
                     par_option = varargin{3};
                     dis_option = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 2
                     obj = varargin{1};
                     map = varargin{2}; 
                     par_option = 'single';
                     dis_option = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 otherwise
                     error('Invalid number of inputs, should be 1, 2, 3, or 4');
             end

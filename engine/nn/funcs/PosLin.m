@@ -34,7 +34,7 @@ classdef PosLin
                 case 2 
                     I = varargin{1};
                     index = varargin{2};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     index = varargin{2};
@@ -455,12 +455,12 @@ classdef PosLin
                     In = varargin{1};
                     option = varargin{2};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     In = varargin{1};
                     option = varargin{2};
                     dis_opt = varargin{3};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     In = varargin{1};
                     option = varargin{2};
@@ -696,17 +696,17 @@ classdef PosLin
                     I = varargin{1};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 2
                     I = varargin{1};
                     option = varargin{2};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     option = varargin{2};
                     dis_opt = varargin{3};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     option = varargin{2};
@@ -802,19 +802,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
@@ -850,16 +850,16 @@ classdef PosLin
                         fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
                     end
                     map2 = find(lb < 0 & ub > 0);
-                    display(length(map2));
+           
                     n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
-                    display(n1);
+
                     if strcmp(dis_opt, 'display')
                         fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
                     end
                     [~,midx] = sort(ub(map2)-lb(map2), 'descend');
                     map21 = map2(midx(1:n1)); % neurons with optimized ranged
                     map22 = map2(midx(n1+1:length(map2))); % neurons without optimized ranges
-                    display(length(map22));
+
                     lb1 = lb(map22);
                     ub1 = ub(map22); 
                     
@@ -924,19 +924,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
@@ -968,9 +968,7 @@ classdef PosLin
                     fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
                 end
                 map2 = find(lb < 0 & ub > 0);
-                display(length(map2));
                 n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
-                display(n1);
                 if strcmp(dis_opt, 'display')
                     fprintf('\nFinding neurons (in (1-%.3f) x %d neurons = %d) with ub <= 0 by optimizing ranges, i.e. relaxing %2.2f%%: ', relaxFactor, length(map2), n1, 100*relaxFactor);                 
                 end
@@ -1043,19 +1041,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
@@ -1199,19 +1197,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
@@ -1361,19 +1359,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
@@ -1477,19 +1475,19 @@ classdef PosLin
                     relaxFactor = varargin{2};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 3
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 4
                     I = varargin{1};
                     relaxFactor = varargin{2};
                     option = varargin{3};
                     dis_opt = varargin{4};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 case 5
                     I = varargin{1};
                     relaxFactor = varargin{2};
