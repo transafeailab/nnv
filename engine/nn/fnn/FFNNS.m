@@ -2035,7 +2035,6 @@ classdef FFNNS < handle
                 obj.reach(in_image, obj.reachMethod, obj.numCores, obj.relaxFactor, obj.dis_opt, obj.lp_solver);
                 R = obj.outputSet; 
                 [lb, ub] = R.estimateRanges;
-
                 max_val = lb(correct_id);
                 max_cd = find(ub > max_val); % max point candidates
                 max_cd(max_cd == correct_id) = []; % delete the max_id

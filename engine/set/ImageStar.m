@@ -1283,7 +1283,7 @@ classdef ImageStar < handle
                     obj = varargin{1};
                     p1 = varargin{2};
                     p2 = varargin{3};
-                    lp_solver = 'glpk';
+                    lp_solver = 'linprog';
                 case 4
                     obj = varargin{1};
                     p1 = varargin{2};
@@ -1313,7 +1313,7 @@ classdef ImageStar < handle
                 [~, ~, exitflag, ~] = linprog(f, new_C, new_d, [], [], obj.pred_lb, obj.pred_ub, options);
                 if exitflag == 1 % feasible solution exist
                     b = 1;
-                elseif exitflag == -2
+                elseif exitflag == -2 || exitflag == -5
                     b = 0;
                 else
                     error('ERROR, exitflag = %d', exitflag);
@@ -1322,7 +1322,7 @@ classdef ImageStar < handle
                 [~,~,exitflag,~] = glpk(f, new_C, new_d, obj.pred_lb, obj.pred_ub);
                 if exitflag == 5 || exitflag == 2 % feasible solution exist
                     b = 1;
-                elseif exitflag == 4 || exitflag == 3 % no feasible solution exit
+                elseif exitflag == 4 || exitflag == 3 || exitflag == 110 % no feasible solution exit
                     b = 0;
                 else
                     error('ERROR, exitflag = %d', exitflag);
@@ -1330,9 +1330,6 @@ classdef ImageStar < handle
             else
                 error('Unknown lp solver, should be glpk or linprog');
             end
-            
-            
-
             
         end
                

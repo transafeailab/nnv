@@ -215,9 +215,10 @@ classdef SatLins
                 % constraint 2: y[index] >= x[index]
                 C2 = [I.V(index, 2:n) -1];
                 d2 = -I.V(index, 1);
-                % constraint 3: y[index] <= ((ub+1)x[index] -ub(lb + 1))/(ub - lb)
-                C3 = [-((ub + 1)/(ub -lb))*I.V(index, 2:n) 1];
-                d3 = -ub*(lb + 1)/(ub - lb) + ((ub+1)/(ub-lb))*I.V(index,1);
+                % constraint 3: y[index] <= (1+ub)(x-lb)/(ub - lb) -1
+                a = (1+ub)/(ub-lb);
+                C3 = [-a*I.V(index, 2:n) 1];
+                d3 = -1 + a*I.V(index,1) - a*lb;
 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];
@@ -243,12 +244,14 @@ classdef SatLins
                 C2 = zeros(1, n);
                 C2(n) = 1;
                 d2 = 1;
-                % constraint 3: y[index] <= 2x/(1 -lb) - (lb+1)/(1-lb)
-                C3 = [(-2/(1-lb))*I.V(index, 2:n) 1];
-                d3 = (2/(1-lb))*I.V(index, 1) - (lb+1)/(1-lb);
-                % constraint 4: y[index] >=  2x/(ub + 1) + (1-ub)/(1 + ub)
-                C4 = [(2/(ub+1))*I.V(index, 2:n) -1];
-                d4 = -(2/(ub+1))*I.V(index, 1) + (ub-1)/(ub+1);
+                % constraint 3: y[index] <= 2(x-lb)/(1-lb) - 1
+                a = 2/(1-lb);
+                C3 = [-a*I.V(index, 2:n) 1];
+                d3 = a*I.V(index, 1) - 1 - a*lb;
+                % constraint 4: y[index] >=  2(x+1)/(ub+1) - 1
+                a = 2/(ub+1);
+                C4 = [a*I.V(index, 2:n) -1];
+                d4 = -a*I.V(index, 1) + 1 - a;
                 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];

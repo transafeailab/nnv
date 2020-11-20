@@ -210,8 +210,9 @@ classdef SatLin
                 C2 = [I.V(index, 2:n) -1];
                 d2 = -I.V(index, 1);
                 % constraint 3: y[index] <= ub(x[index] -lb)/(ub - lb)
-                C3 = [-(ub/(ub-lb))*I.V(index, 2:n) 1];
-                d3 = -(ub*lb/(ub-lb))*(1 - I.V(index, 1));
+                a = ub/(ub-lb);
+                C3 = [-a*I.V(index, 2:n) 1];
+                d3 = a*I.V(index, 1) - a*lb;
 
                 m = size(I.C, 1);
                 C0 = [I.C zeros(m, 1)];
@@ -278,7 +279,7 @@ classdef SatLin
             else
                 In = I;
                 for i=1:I.dim
-                    fprintf('\nPerforming exact SatLin_%d operation using star', i);
+                    fprintf('\nPerforming approximate SatLin_%d operation using star', i);
                     In = SatLin.stepReachStarApprox(In, i);
                 end
                 S = In;
@@ -662,6 +663,7 @@ classdef SatLin
                 S = Star(new_V, new_C, new_d, new_lb, new_ub);               
             end
             
+            % case 6)
             if lb < 0 && ub > 1
                 % constraint 1: y[index] >= 0
                 n = I.nVar + 1;
