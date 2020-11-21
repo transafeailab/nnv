@@ -167,6 +167,7 @@ classdef LayerS
             W1 = obj.W;
             b1 = obj.b;
             f1 = obj.f;
+            
             if strcmp(obj.option, 'parallel') % reachability analysis using star set
                 
                 rF = obj.relaxFactor;
@@ -187,7 +188,7 @@ classdef LayerS
                     elseif strcmp(f1, 'poslin')
                         S = [S PosLin.reach(I1, method, [], rF, dis, lps)];
                     elseif strcmp(f1, 'satlin')
-                        S = [S SatLin.reach(I1, method)];
+                        S = [S SatLin.reach(I1, method, [], dis, lps)];
                     elseif strcmp(f1, 'satlins')
                         S = [S SatLins.reach(I1, method)];
                     elseif strcmp(f1, 'logsig')
@@ -219,7 +220,7 @@ classdef LayerS
                     elseif strcmp(f1, 'poslin')
                         S = [S PosLin.reach(I1, method, [], obj.relaxFactor, obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'satlin')
-                        S = [S SatLin.reach(I1, method)];
+                        S = [S SatLin.reach(I1, method, [], obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'satlins')
                         S = [S SatLins.reach(I1, method)];
                     elseif strcmp(f1, 'logsig')

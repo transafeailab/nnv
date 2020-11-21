@@ -16,52 +16,173 @@ classdef SatLin
         end
             
         % stepReach method, compute reachable set for a single step
-        function S = stepReach(I, index)
+        function S = stepReach(varargin)
             % @I: single star set input
             % @index: index of the neural performing stepSatLin
             % @S: star output set
             
             % author: Dung Tran
             % date: 27/2/2019
+            % update 11/20/2020
             
+            switch nargin
+                case 2 
+                    I = varargin{1};
+                    index = varargin{2};
+                    lp_solver = 'glpk';
+                case 3
+                    I = varargin{1};
+                    index = varargin{2};
+                    lp_solver = varargin{3};
+                otherwise
+                    error('Invalid number of input arguments, should be 2 or 3');
+            end
             
             if ~isa(I, 'Star')
                 error('Input is not a star set');
             end
             
-            % case 1: x(index) <= 0, SatLin(x(index)) = 0
-            C0 = I.V(index, 2:I.nVar + 1);
-            d0 = I.V(index, 1);
-            C1 = [I.C; C0];
-            d1 = [I.d; -d0];
-            V1 = I.V;
-            V1(index, :) = zeros(1, I.nVar + 1);
-            S1 = Star(V1, C1, d1, I.predicate_lb, I.predicate_ub);
-            if S1.isEmptySet
-                S1 = [];
+            xmin = I.getMin(index, lp_solver);
+            xmax = I.getMax(index, lp_solver);
+
+            C = I.C;
+            d = I.d;
+            
+            % case 1) only single set
+            if xmin >= 0 && xmax <=1
+                S = I;
             end
             
-            % case 2: 0 <= x(index) <= 1, SatLin(x(index)) = x(index)            
-            V2 = I.V;
-            C2 = [I.C; C0; -C0];
-            d2 = [I.d; 1-d0; d0];
-            S2 = Star(V2, C2, d2, I.predicate_lb, I.predicate_ub);
-            if S2.isEmptySet
-                S2 = [];
+            % case 2)
+            if xmin >=0 && xmax > 1    
+                new_C1 = zeros(2, I.nVar);
+                new_C1(1, index) = -1;
+                new_C1(2, index) = 1;
+                new_C1 = [C; new_C1];
+                new_d1 = [d; 0; 1]; 
+                S1 = Star(I.V, new_C1, new_d1, I.predicate_lb, I.predicate_ub, I.Z);
+                
+                new_V2 = I.V;
+                new_V2(index, :) = 0;
+                new_V2(index, 1) = 1;
+                if ~isempty(I.Z)
+                    new_Z2 = I.Z;
+                    new_Z2.c(index) = 1;
+                    new_Z2.V(index, :) = 0;
+                else
+                    new_Z2 = [];
+                end
+                new_C2 = zeros(1, I.nVar);
+                new_C2(index) = -1;
+                new_C2 = [C; new_C2];
+                new_d2 = [d; -1]; 
+                S2 = Star(new_V2, new_C2, new_d2, I.predicate_lb, I.predicate_ub, new_Z2);
+                
+                S = [S1 S2];
+                
             end
             
-            % case 3: x(index) >= 1
-            C3 = [I.C; -C0];
-            d3 = [I.d; d0 - 1];
-            V3 = I.V;
-            V3(index, 1) = 1;
-            V3(index, 2:I.nVar + 1) = zeros(1, I.nVar);
-            S3 = Star(V3, C3, d3, I.predicate_lb, I.predicate_ub);
-            if S3.isEmptySet
-                S3 = [];
+            % case 3)
+            if xmin < 0 && xmax > 0 && xmax <= 1
+                new_C1 = zeros(1, I.nVar);
+                new_C1(index) = -1;
+                new_C1 = [C; new_C1];
+                new_d1 = [d; 0]; 
+                S1 = Star(I.V, new_C1, new_d1, I.predicate_lb, I.predicate_ub, I.Z);
+                
+                new_V2 = I.V;
+                new_V2(index, :) = 0;
+                if ~isempty(I.Z)
+                    new_Z2 = I.Z;
+                    new_Z2.c(index) = 0;
+                    new_Z2.V(index, :) = 0;
+                else
+                    new_Z2 = [];
+                end
+                new_C2 = zeros(1, I.nVar);
+                new_C2(index) = 1;
+                new_C2 = [C; new_C2];
+                new_d2 = [d; 0]; 
+                S2 = Star(new_V2, new_C2, new_d2, I.predicate_lb, I.predicate_ub, new_Z2);
+                
+                S = [S1 S2];
+                
             end
             
-            S = [S1 S2 S3];
+            % case 4)
+            if xmin < 0 && xmax > 1
+                new_C1 = zeros(1, I.nVar);
+                new_C1(index) = 1;
+                new_C1 = [C; new_C1];
+                new_d1 = [d; 0];
+                new_V1 = I.V; 
+                new_V1(index, :) = 0;
+                if ~isempty(I.Z)
+                    new_Z1 = I.Z;
+                    new_Z1.c(index) = 0;
+                    new_Z1.V(index, :) = 0;
+                else
+                    new_Z1 = [];
+                end
+                S1 = Star(new_V1, new_C1, new_d1, I.predicate_lb, I.predicate_ub, new_Z1);
+                
+                new_C2 = zeros(2, I.nVar);
+                new_C2(1, index) = -1;
+                new_C2(2, index) = 1; 
+                new_C2 = [C; new_C2];
+                new_d2 = [d; 0; 1]; 
+                S2 = Star(I.V, new_C2, new_d2, I.predicate_lb, I.predicate_ub, I.Z);
+                
+                
+                new_C3 = zeros(1, I.nVar);
+                new_C3(1, index) = -1;
+                new_C3 = [C; new_C3];
+                new_d3 = [d; -1];
+                new_V3 = I.V;
+                new_V3(index, :) = 0;
+                new_V3(index, 1) = 1;
+                if ~isempty(I.Z)
+                    new_Z3 = I.Z;
+                    new_Z3.c(index) = 1;
+                    new_Z3.V(index, :) = 0;
+                else
+                    new_Z3 = [];
+                end
+                S3 = Star(new_V3, new_C3, new_d3, I.predicate_lb, I.predicate_ub, new_Z3);
+                
+                S = [S1 S2 S3];
+                
+            end
+            
+            % case 5)
+            if xmin >= 1
+                new_V = I.V;
+                new_V(index, :) = 0;
+                new_V(index, 1) = 1;
+                if ~isempty(I.Z)
+                    new_Z = I.Z;
+                    new_Z.c(index) = 1;
+                    new_Z.V(index, :) = 0;
+                else
+                    new_Z = [];
+                end
+                S = Star(new_V, I.C, I.d, I.predicate_lb, I.predicate_ub, new_Z);
+                
+            end
+            
+            % case 6)
+            if xmax <= 0
+                new_V = I.V;
+                new_V(index, :) = 0;
+                if ~isempty(I.Z)
+                    new_Z = I.Z;
+                    new_Z.c(index) = 0;
+                    new_Z.V(index, :) = 0;
+                else
+                    new_Z = [];
+                end
+                S = Star(new_V, I.C, I.d, I.predicate_lb, I.predicate_ub, new_Z);
+            end
                      
         end
         
@@ -81,12 +202,14 @@ classdef SatLin
                     I = varargin{1};
                     index = varargin{2};
                     option = varargin{3};
-                case 2
+                    lp_solver = 'glpk';
+                case 4
                     I = varargin{1};
                     index = varargin{2};
-                    option = [];
+                    option = varargin{3};
+                    lp_solver = varargin{4};
                 otherwise
-                    error('Invalid number of input arguments (should be 2 or 3)');
+                    error('Invalid number of input arguments, should be 3 or 4');
             end
             
             
@@ -97,13 +220,13 @@ classdef SatLin
             if isempty(option)
                 
                 for i=1:p
-                    S =[S, SatLin.stepReach(I(i), index)];
+                    S =[S, SatLin.stepReach(I(i), index, lp_solver)];
                 end
                 
             elseif strcmp(option, 'parallel')
                 
                 parfor i=1:p
-                    S =[S, SatLin.stepReach(I(i), index)];
+                    S =[S, SatLin.stepReach(I(i), index, lp_solver)];
                 end
                 
             else
@@ -116,20 +239,64 @@ classdef SatLin
         
         
         % exact reachability analysis using Star
-        function S = reach_star_exact(I, option)
+        function S = reach_star_exact(varargin)
             % @I: an array of star input sets
             % @option: = 'parallel' use parallel option
             %          = '' do use parallel option
             
             % author: Dung Tran
             % date: 27/2/2019
+            % update: 11/20/2020
             
-            if ~isempty(I)       
-                dim = I(1).dim;
-                In = I;
-                for i=1:dim
-                    fprintf('\nPerforming exact SatLin_%d operation using Star', i);
-                    In = SatLin.stepReachMultipleInputs(In, i, option);
+            switch nargin
+                case 2
+                    I = varargin{1};
+                    option = varargin{2};
+                    dis_opt = [];
+                    lp_solver = 'glpk';
+                case 3
+                    I = varargin{1};
+                    option = varargin{2};
+                    dis_opt = varargin{3};
+                    lp_solver = 'glpk';
+                case 4
+                    I = varargin{1};
+                    option = varargin{2};
+                    dis_opt = varargin{3};
+                    lp_solver = varargin{4};
+                otherwise
+                    error('Invalid number of input arguments, should be 2, 3 or 4');
+            end
+            
+            if ~isempty(I)
+                [lb, ub] = I.estimateRanges;
+                map1 = find(ub <= 0); % computation map
+                V = I.V;
+                V(map1, :) = 0;
+                % update outer-zono
+                map2 = find(lb >= 1); 
+                V(map1, :) = 0;
+                V(map1, 1) = 1;
+                if ~isempty(I.Z)
+                    c1 = I.Z.c;
+                    c1(map1, :) = 0;
+                    V1 = I.Z.V;
+                    V1(map1, :) = 0;
+                    c1(map2) = 1;
+                    V1(map2, :) = 0;
+                    new_Z = Zono(c1, V1);
+                else
+                    new_Z = [];
+                end
+                
+                In = Star(V, I.C, I.d, I.predicate_lb, I.predicate_ub, new_Z);                    
+                map = find(lb < 1 & ub > 0);
+                m = length(map);                
+                for i=1:m
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nPerforming exact SatLin_%d operation using Star', map(i));
+                    end
+                    In = SatLin.stepReachMultipleInputs(In, map(i), option, lp_solver);
                 end             
                 
                 S = In;
@@ -141,20 +308,24 @@ classdef SatLin
         end
         
         
+        
+        
         % step over-approximate reachability analysis using Star
-        function S = stepReachStarApprox(I, index)
+        function S = stepReachStarApprox(I, index, lp_solver)
             % @I: star input set
             % @index: index of the neuron where we perform step Reach
             % @S: Star output set 
             
             % author: Dung Tran
             % date: 4/3/2019
+            % update: 11/20/2020
             
             if ~isa(I, 'Star')
                 error('Input is not a star');
             end
             
-            [lb, ub] = I.getRange(index);
+            lb = I.getMin(index, lp_solver);
+            ub = I.getMax(index, lp_solver);
             
             if ub <= 0
                 V = I.V;
@@ -263,12 +434,29 @@ classdef SatLin
         end
         
         % over-approximate reachability analysis using star
-        function S = reach_star_approx(I)
+        function S = reach_star_approx(varargin)
             % @I: star input set
             % @S: star output set
             
             % author: Dung Tran
             % date: 4/3/2019
+            
+            switch nargin
+                case 1
+                    I = varargin{1};
+                    dis_opt = [];
+                    lp_solver = 'glpk';
+                case 2
+                    I = varargin{1};
+                    dis_opt = varargin{2};
+                    lp_solver = 'glpk';
+                case 3
+                    I = varargin{1};
+                    dis_opt = varargin{2};
+                    lp_solver = varargin{3};
+                otherwise
+                    error('Invalid number of input arguments, should be 1, 2, or 3');
+            end
             
             if ~isa(I, 'Star')
                 error('Input is not a star');
@@ -279,8 +467,10 @@ classdef SatLin
             else
                 In = I;
                 for i=1:I.dim
-                    fprintf('\nPerforming approximate SatLin_%d operation using star', i);
-                    In = SatLin.stepReachStarApprox(In, i);
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nPerforming approximate SatLin_%d operation using star', i);
+                    end
+                    In = SatLin.stepReachStarApprox(In, i, lp_solver);
                 end
                 S = In;
             end
@@ -406,19 +596,35 @@ classdef SatLin
         
         
         % exact reachability analysis using polyhedorn
-        function S = reach_polyhedron_exact(I, option)
+        function S = reach_polyhedron_exact(varargin)
             % @I: an array of star input sets
             % @option: = 'parallel' use parallel option
             %          = '' do use parallel option
             
             % author: Dung Tran
             % date: 6/4/2019
+            % update: 11/20/2020
+            
+             switch nargin
+                case 2
+                    I = varargin{1};
+                    option = varargin{2};
+                    dis_opt = [];
+                case 3
+                    I = varargin{1};
+                    option = varargin{2};
+                    dis_opt = varargin{3};
+                otherwise
+                    error('Invalid number of input arguments, should be 2 or 3');
+            end
             
             if ~isempty(I)       
                 dim = I(1).Dim;
                 In = I;
                 for i=1:dim
-                    fprintf('\nPerforming exact SatLin_%d operation using Polyhedron', i);
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nPerforming exact SatLin_%d operation using Polyhedron', i);
+                    end
                     In = SatLin.stepReachPolyhedronMultipleInputs(In, i, option);
                 end             
                 
@@ -507,15 +713,27 @@ classdef SatLin
         end
         
         % over-approximate reachability analysis use zonotope
-        function Z = reach_zono_approx(I)
+        function Z = reach_zono_approx(varargin)
             % @I: zonotope input
             % @Z: zonotope output
             
             % author: Dung Tran
             % date: 5/3/2019
+            % update: 11/20/2020
             
             % reference: Fast and Effective Robustness Ceritification,
             % Gagandeep Singh, NIPS 2018
+            
+            switch nargin
+                case 1
+                    I = varargin{1};
+                    dis_opt = [];
+                case 2
+                    I = varargin{1};
+                    dis_opt = varargin{2};
+                otherwise
+                    error('Invalid number of input arguments, should be 1 or 2');
+            end
             
             if ~isa(I, 'Zono')
                 error('Input is not a Zonotope');
@@ -523,7 +741,9 @@ classdef SatLin
                       
             In = I;
             for i=1:I.dim
-                fprintf('\nPerforming approximate SatLin_%d operation using Zonotope', i);
+                if strcmp(dis_opt, 'display')
+                    fprintf('\nPerforming approximate SatLin_%d operation using Zonotope', i);
+                end 
                 In = SatLin.stepReachZonoApprox(In, i);
             end
             Z = In;
@@ -539,7 +759,7 @@ classdef SatLin
         % step over-approximate reachability analysis using abstract-domain
         % we extend abstract-domain method from ReLU to SatLin
         % we use star set to represent abstract-domain
-        function S = stepReachAbstractDomain(I, index)
+        function S = stepReachAbstractDomain(I, index, lp_solver)
             % @I: star-input set
             % @index: index of neuron performing stepReach
             % @S: star output set represent abstract-domain of the output
@@ -547,6 +767,7 @@ classdef SatLin
             
             % author: Dung Tran
             % date: 16/3/2019
+            % update: 11/20/2020
         
             % reference: An Abstract Domain for Certifying Neural Networks,
             % Gagandeep Singh, POPL 2019
@@ -555,8 +776,8 @@ classdef SatLin
                 error('Input is not a Star');
             end
             
-            lb = I.getMin(index);
-            ub = I.getMax(index);
+            lb = I.getMin(index, lp_solver);
+            ub = I.getMax(index, lp_solver);
             
             % case 1)
             if ub <= 0
@@ -714,14 +935,32 @@ classdef SatLin
         
         
         % over-approximate reachability analysis using abstract-domain
-        function S = reach_abstract_domain(I)
+        function S = reach_abstract_domain(varargin)
             % @I: star input set
             % @S: star output set
 
             % author: Dung Tran
             % date: 16/3/2019
-
-
+            % update: 11/20/2020
+            
+            switch nargin
+                case 1
+                    I = varargin{1};
+                    dis_opt = [];
+                    lp_solver = 'glpk';
+                case 2
+                    I = varargin{1};
+                    dis_opt = varargin{2};
+                    lp_solver = 'glpk';
+                case 3
+                    I = varargin{1};
+                    dis_opt = varargin{2};
+                    lp_solver = varargin{3};
+                otherwise
+                    error('Invalid number of input arguments, should be 1, 2 or 3');
+            end
+            
+            
             if ~isa(I, 'Star')
                 error('Input is not a star');
             end
@@ -731,8 +970,10 @@ classdef SatLin
             else
                 In = I;
                 for i=1:I.dim
-                    fprintf('\nPerforming approximate SatLin_%d operation using Abstract-Domain', i);
-                    In = SatLin.stepReachAbstractDomain(In, i);
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nPerforming approximate SatLin_%d operation using Abstract-Domain', i);
+                    end
+                    In = SatLin.stepReachAbstractDomain(In, i, lp_solver);
                 end
                 S = In;
             end
@@ -761,54 +1002,64 @@ classdef SatLin
             
             % author: Dung Tran
             % date: 27/2/2019
+            % update: 11/20/2020
             
             switch nargin
                 
+                case 5
+                    I = varargin{1};
+                    method = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = varargin{5};
+                                
+                case 4
+                    I = varargin{1};
+                    method = varargin{2};
+                    option = varargin{3};
+                    dis_opt = varargin{4};
+                    lp_solver = 'glpk';
+                                    
                 case 3
                     I = varargin{1};
                     method = varargin{2};
                     option = varargin{3};
-                
+                    dis_opt = [];
+                    lp_solver = 'glpk';
                 case 2
                     I = varargin{1};
                     method = varargin{2};
                     option = [];
+                    dis_opt = [];
+                    lp_solver = 'glpk';
                 case 1
                     I = varargin{1};
-                    method = 'exact-star';
+                    method = 'approx-star';
                     option = [];
+                    dis_opt = [];
+                    lp_solver = 'glpk';
                 otherwise
-                    error('Invalid number of input arguments (should be 1, 2 or 3)');
+                    error('Invalid number of input arguments (should be 1, 2, 3, or 4)');
             end
             
-            
             if strcmp(method, 'exact-star') % exact analysis using star
-                
-                R = SatLin.reach_star_exact(I, option);
-                
-            elseif strcmp(method, 'exact-polyhedron') % exact analysis using star
-                
-                R = SatLin.reach_polyhedron_exact(I, option);
-                
+                R = SatLin.reach_star_exact(I, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'exact-polyhedron') % exact analysis using polyhedron
+                R = SatLin.reach_polyhedron_exact(I, option, dis_opt);
             elseif strcmp(method, 'approx-star')  % over-approximate analysis using star
-                
-                R = SatLin.reach_star_approx(I);
-                
-            elseif strcmp(method, 'approx-zono')  % over-approximate analysis using zonotope
-                
-                R = SatLin.reach_zono_approx(I);
-                
+                R = SatLin.reach_star_approx(I, dis_opt, lp_solver);
+            elseif strcmp(method, 'approx-zono')  % over-approximate analysis using zonotope 
+                R = SatLin.reach_zono_approx(I, dis_opt);
             elseif strcmp(method, 'abs-dom')  % over-approximate analysis using abstract-domain
-                
-                R = SatLin.reach_abstract_domain(I);
-                
+                R = SatLin.reach_abstract_domain(I, dis_opt, lp_solver);
             elseif strcmp(method, 'exact-face-latice') % exact analysis using face-latice
                 fprintf('\nNNV have not yet support Exact Face-Latice Method');
             elseif strcmp(method, 'approx-face-latice') % over-approximate analysis using face-latice
                 fprintf('\nNNV have not yet support Approximate Face-Latice Method');
             end
-                        
+            
         end
+
         
     end
         
