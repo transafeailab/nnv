@@ -47,6 +47,8 @@ classdef SatLin
 
             C = I.C;
             d = I.d;
+            c1 = I.V(index, 1);
+            V1 = I.V(index, 2:I.nVar+1);
             
             % case 1) only single set
             if xmin >= 0 && xmax <=1
@@ -54,14 +56,13 @@ classdef SatLin
             end
             
             % case 2)
-            if xmin >=0 && xmax > 1    
-                new_C1 = zeros(2, I.nVar);
-                new_C1(1, index) = -1;
-                new_C1(2, index) = 1;
-                new_C1 = [C; new_C1];
-                new_d1 = [d; 0; 1]; 
+            if xmin >=0 && xmax > 1 
+                % x >= 0 & x <=1
+                new_C1 = [C; -V1; V1];
+                new_d1 = [d; c1; 1-c1]; 
                 S1 = Star(I.V, new_C1, new_d1, I.predicate_lb, I.predicate_ub, I.Z);
                 
+                % x > 1
                 new_V2 = I.V;
                 new_V2(index, :) = 0;
                 new_V2(index, 1) = 1;
@@ -72,10 +73,8 @@ classdef SatLin
                 else
                     new_Z2 = [];
                 end
-                new_C2 = zeros(1, I.nVar);
-                new_C2(index) = -1;
-                new_C2 = [C; new_C2];
-                new_d2 = [d; -1]; 
+                new_C2 = [C; -V1];
+                new_d2 = [d; -1 + c1]; 
                 S2 = Star(new_V2, new_C2, new_d2, I.predicate_lb, I.predicate_ub, new_Z2);
                 
                 S = [S1 S2];
@@ -84,12 +83,13 @@ classdef SatLin
             
             % case 3)
             if xmin < 0 && xmax > 0 && xmax <= 1
-                new_C1 = zeros(1, I.nVar);
-                new_C1(index) = -1;
-                new_C1 = [C; new_C1];
-                new_d1 = [d; 0]; 
+                
+                % 1 >= x >= 0
+                new_C1 = [C; -V1];
+                new_d1 = [d; c1]; 
                 S1 = Star(I.V, new_C1, new_d1, I.predicate_lb, I.predicate_ub, I.Z);
                 
+                % x < 0
                 new_V2 = I.V;
                 new_V2(index, :) = 0;
                 if ~isempty(I.Z)
@@ -99,10 +99,8 @@ classdef SatLin
                 else
                     new_Z2 = [];
                 end
-                new_C2 = zeros(1, I.nVar);
-                new_C2(index) = 1;
-                new_C2 = [C; new_C2];
-                new_d2 = [d; 0]; 
+                new_C2 = [C; V1];
+                new_d2 = [d; -c1]; 
                 S2 = Star(new_V2, new_C2, new_d2, I.predicate_lb, I.predicate_ub, new_Z2);
                 
                 S = [S1 S2];
@@ -111,10 +109,10 @@ classdef SatLin
             
             % case 4)
             if xmin < 0 && xmax > 1
-                new_C1 = zeros(1, I.nVar);
-                new_C1(index) = 1;
-                new_C1 = [C; new_C1];
-                new_d1 = [d; 0];
+                
+                % x < 0
+                new_C1 = [C; V1];
+                new_d1 = [d; -c1];
                 new_V1 = I.V; 
                 new_V1(index, :) = 0;
                 if ~isempty(I.Z)
@@ -126,18 +124,14 @@ classdef SatLin
                 end
                 S1 = Star(new_V1, new_C1, new_d1, I.predicate_lb, I.predicate_ub, new_Z1);
                 
-                new_C2 = zeros(2, I.nVar);
-                new_C2(1, index) = -1;
-                new_C2(2, index) = 1; 
-                new_C2 = [C; new_C2];
-                new_d2 = [d; 0; 1]; 
+                % 0 <= x <= 1
+                new_C2 = [C; -V1; V1];
+                new_d2 = [d; c1; 1-c1]; 
                 S2 = Star(I.V, new_C2, new_d2, I.predicate_lb, I.predicate_ub, I.Z);
                 
-                
-                new_C3 = zeros(1, I.nVar);
-                new_C3(1, index) = -1;
-                new_C3 = [C; new_C3];
-                new_d3 = [d; -1];
+                % x > 1
+                new_C3 = [C; -V1];
+                new_d3 = [d; -1 + c1];
                 new_V3 = I.V;
                 new_V3(index, :) = 0;
                 new_V3(index, 1) = 1;
