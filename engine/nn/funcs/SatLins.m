@@ -727,7 +727,7 @@ classdef SatLins
                     new_C = [C0; C1; C3];
                     new_d = [d0; d1; d3];
                     new_lb = [I.predicate_lb; -1];
-                    new_ub = [I.predicate_ub; 2*(ub-lb)/(1-lb) -1];
+                    new_ub = [I.predicate_ub; 2*(ub-lb)/(1-lb)-1];
                 else
                     % get second candidate as resulted abstract-domain
                     new_C = [C0; C2; C4];
