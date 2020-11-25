@@ -1280,6 +1280,28 @@ classdef Star
             S = Star(V1, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub, new_Z);          
         end
         
+        % scale a row of a star set
+        function S = scaleRow(obj, map, gamma)
+            % @map: an array of indexes
+            % gamma: scale value
+            
+            % author: Dung Tran
+            % date: 11/24/2020
+                
+            V1 = obj.V;
+            V1(map, :) = gamma*V1(map,:);
+            if ~isempty(obj.Z)
+                c2 = obj.Z.c;
+                c2(map) = gamma*c2;
+                V2 = obj.Z.V;
+                V2(map, :) = gamma*V2(map, :);
+                new_Z = Zono(c2, V2);
+            else
+                new_Z = [];
+            end
+            S = Star(V1, obj.C, obj.d, obj.predicate_lb, obj.predicate_ub, new_Z);          
+        end
+        
         % get lower bound and upper bound vector of the state variables
         function [lb, ub] = getRanges(obj)
             

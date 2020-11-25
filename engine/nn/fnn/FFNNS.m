@@ -121,7 +121,7 @@ classdef FFNNS < handle
             b = 1; 
             for i=1:obj.nL
                 f = obj.Layers(i).f;                
-                if ~strcmp(f, 'poslin') && ~strcmp(f, 'purelin') && ~strcmp(f, 'satlin') && ~strcmp(f, 'satlins')
+                if ~strcmp(f, 'poslin') && ~strcmp(f, 'purelin') && ~strcmp(f, 'satlin') && ~strcmp(f, 'satlins') && ~strcmp(f, 'leakyrelu')
                     b = 0;
                     return;
                 end
@@ -262,7 +262,6 @@ classdef FFNNS < handle
                         obj.reachMethod = 'exact-star';
                         obj.numCores = 1;
                     else
-                        fprintf('\nHi')
                         if isfield(varargin{2}, 'inputSet')
                             obj.inputSet = varargin{2}.inputSet;
                         end
@@ -2322,14 +2321,70 @@ classdef FFNNS < handle
                    b = MatlabNet.b{i};
                    Layer = LayerS(W, b, act_func);
                     
-                end
-                
+                end             
                 Layers = [Layers Layer];
-                
             end
             
             nnvNet = FFNNS(Layers, name);
             
+        end
+        
+        % random generate a network for testing
+        function net = rand(neurons, funcs)
+            % neurons: an array of neurons of input layer - hidden layers-
+            % output layers
+            % funcs: an array of activation functions of hidden layers
+            
+            % author: Dung Tran
+            % date: 11/24/2020
+            
+            n = length(neurons);
+            if n < 2
+                error('Network should have at least one input layer, zero hidden layer, and one output layer, i.e., length(neurons) >= 2');
+            end
+            for i=1:n
+                if neurons(i) <= 0
+                    error('Invalid number of neurons at layer %d', i);
+                end
+            end
+            m = length(funcs);
+            for i=1:m
+                a = ~strcmp(funcs(i), 'poslin') && ~strcmp(funcs(i), 'satlin') && ~strcmp(funcs(i), 'satlins');
+                b = ~strcmp(funcs(i), 'leakyrelu') && ~strcmp(funcs(i), 'purelin') && ~strcmp(funcs(i), 'logsig') && ~strcmp(funcs(i), 'tansig');
+                if a && b
+                    error('Unknown or unsupport activation function (%s)', funcs(i));
+                end
+            end
+            
+            if m ~= 1 && m ~= n-1
+                error('Inconsistency between the number of layers and the number of activation functions');
+            end
+            
+            layers = [];
+            for i=2:n
+                W = rand(neurons(i), neurons(i-1));
+                b = rand(neurons(i),1);
+                if m ~= 1
+                    if strcmp(funcs(i-1), 'leakyrelu')
+                        gamma = 0.2*rand(1,1);
+                        L = LayerS(W, b, funcs(i-1), gamma);
+                    else
+                        L = LayerS(W, b, funcs(i-1));
+                    end
+                else
+                    if strcmp(funcs, 'leakyrelu')
+                        gamma = 0.2*rand(1,1);
+                        L = LayerS(W, b, funcs, gamma);
+                    else
+                        L = LayerS(W, b, funcs);
+                    end
+                end
+                
+                layers = [layers L];
+            end
+            
+            net = FFNNS(layers);
+
         end
         
     end

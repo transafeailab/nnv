@@ -77,7 +77,7 @@ classdef LayerS
                 y = y1;
             elseif strcmp(obj.f, 'softmax')
                 y = softmax(y1);
-            elseif strcmp(obj.f, 'leakyReLU')
+            elseif strcmp(obj.f, 'leakyrelu')
                 y = y1;
                 y(find(y < 0)) = obj.gamma*y(find(y<0));
             else
@@ -157,7 +157,7 @@ classdef LayerS
                 error('Unknown reachability analysis method');
             end
             
-            if strcmp(method, 'exact-star') && (~strcmp(obj.f, 'purelin') && ~strcmp(obj.f, 'poslin') && ~strcmp(obj.f, 'satlin') && ~strcmp(obj.f, 'satlins'))
+            if strcmp(method, 'exact-star') && (~strcmp(obj.f, 'purelin') && ~strcmp(obj.f, 'leakyrelu') && ~strcmp(obj.f, 'poslin') && ~strcmp(obj.f, 'satlin') && ~strcmp(obj.f, 'satlins'))
                 method = 'approx-star';
                 fprintf('\nThe current layer has %s activation function -> cannot compute exact reachable set for the current layer, we use approx-star method instead', obj.f);
             end
@@ -167,6 +167,7 @@ classdef LayerS
             W1 = obj.W;
             b1 = obj.b;
             f1 = obj.f;
+            gamma1 = obj.gamma;
             
             if strcmp(obj.option, 'parallel') % reachability analysis using star set
                 
@@ -191,6 +192,8 @@ classdef LayerS
                         S = [S SatLin.reach(I1, method, [], dis, lps)];
                     elseif strcmp(f1, 'satlins')
                         S = [S SatLins.reach(I1, method)];
+                    elseif strcmp(f1, 'leakyrelu')
+                        S = [S LeakyReLU.reach(I1, gamma1, method, [], rF, dis, lps)];
                     elseif strcmp(f1, 'logsig')
                         S = [S LogSig.reach(I1, method,[], rF, dis, lps)];
                     elseif strcmp(f1, 'tansig')
@@ -223,6 +226,8 @@ classdef LayerS
                         S = [S SatLin.reach(I1, method, [], obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'satlins')
                         S = [S SatLins.reach(I1, method)];
+                    elseif strcmp(f1, 'leakyrelu')
+                        S = [S LeakyReLU.reach(I1, obj.gamma, method, [], obj.relaxFactor, obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'logsig')
                         S = [S LogSig.reach(I1, method, [], obj.relaxFactor, obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'tansig')
