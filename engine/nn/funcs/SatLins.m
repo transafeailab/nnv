@@ -509,7 +509,7 @@ classdef SatLins
                 Z = Zono(c, V);
             end
             
-            if lb < -1 && (0 < ub) && (ub <= 1)
+            if lb < -1 && (-1 < ub) && (ub <= 1)
                 % lamda * x + lamda - 1 <= y <= lamda * x + ub*(1-lamda)
                 % lamda_opt = ub/(ub - lb);
                 c = I.c;
