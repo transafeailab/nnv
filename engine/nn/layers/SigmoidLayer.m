@@ -230,7 +230,7 @@ classdef SigmoidLayer < handle
                     option = varargin{4};
                     relaxFactor = varargin{5};
                     dis_opt = varargin{6};
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 
                 case 5
                     obj = varargin{1};
@@ -239,7 +239,7 @@ classdef SigmoidLayer < handle
                     option = varargin{4};
                     relaxFactor = varargin{5};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                         
                 case 4
                     obj = varargin{1};
@@ -247,7 +247,7 @@ classdef SigmoidLayer < handle
                     method = varargin{3};
                     option = varargin{4};
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                 
                 case 3
                     obj = varargin{1};
@@ -255,7 +255,7 @@ classdef SigmoidLayer < handle
                     method = varargin{3};
                     option = 'single';
                     dis_opt = [];
-                    lp_solver = 'linprog';
+                    lp_solver = 'glpk';
                     
                 otherwise
                     error('Invalid number of input arguments (should be 2,3,4,5 or 6)');

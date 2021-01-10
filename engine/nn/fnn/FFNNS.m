@@ -2120,7 +2120,8 @@ classdef FFNNS < handle
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = 1;
                     
                 case 2
                     obj = varargin{1};

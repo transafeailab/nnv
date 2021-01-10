@@ -786,7 +786,7 @@ classdef PosLin
     
     methods(Static) % reachability analysis using relax-star method
         % a relaxed star-approx method using distance heristics
-        function S = reach_relaxed_star_dis(varargin)
+        function S = reach_relaxed_star_range(varargin)
             % @I: star input set
             % @relaxFactor: a relaxFactor
             % @S: star output set
@@ -1027,7 +1027,7 @@ classdef PosLin
         % a relaxed star-approx method using lower bound and upper bound heuristic
         % optimize ranges of neurons that have largest lower bounds and
         % upper bounds
-        function S = reach_relaxed_star_lb_ub(varargin)
+        function S = reach_relaxed_star_bound(varargin)
             % @I: star input set
             % @relaxFactor: a relaxFactor
             % @S: star output set
@@ -2062,10 +2062,10 @@ classdef PosLin
                 R = PosLin.reach_polyhedron_exact(I, option, dis_opt);
             elseif strcmp(method, 'approx-star')  % over-approximate analysis using star
                 R = PosLin.reach_star_approx2(I, option, dis_opt, lp_solver);
-            elseif strcmp(method, 'relax-star-dis')
-                R = PosLin.reach_relaxed_star_dis(I, relaxFactor, option, dis_opt, lp_solver);
-            elseif strcmp(method, 'relax-star-lb-ub')
-                R = PosLin.reach_relaxed_star_lb_ub(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-range')
+                R = PosLin.reach_relaxed_star_range(I, relaxFactor, option, dis_opt, lp_solver);
+            elseif strcmp(method, 'relax-star-bound')
+                R = PosLin.reach_relaxed_star_bound(I, relaxFactor, option, dis_opt, lp_solver);
             elseif strcmp(method, 'relax-star-area')
                 R = PosLin.reach_relaxed_star_area(I, relaxFactor, option, dis_opt, lp_solver);
             elseif strcmp(method, 'relax-star-ub')

@@ -19,6 +19,7 @@ classdef SEGNET < handle
         % properties for reachability analysis        
         reachMethod = 'approx-star';    % reachable set computation scheme, default - 'star'
         reachOption = []; % parallel option, default - non-parallel computing
+        relaxFactor = 0; % no relaxation by default
         numCores = 0; % number of cores (workers) using in computation
         reachSet = [];  % reachable set before the pixelClassification layer
         reachTime = []; % computation time for each layers
@@ -328,14 +329,14 @@ classdef SEGNET < handle
             % date:4/15/2020
             
             
-            switch nargin 
+            switch nargin
                 
                 case 2
                     
                     obj = varargin{1};
                     inputSet = varargin{2};
                     obj.reachMethod = 'approx-star';
-                    obj.numCores = 1; 
+                    obj.numCores = 1;
                     
                 case 3 
                     
@@ -349,11 +350,18 @@ classdef SEGNET < handle
                     obj = varargin{1};
                     inputSet = varargin{2};
                     obj.reachMethod = varargin{3};
-                    obj.numCores = varargin{4}; 
+                    obj.numCores = varargin{4};
+                    
+                case 5
+                    obj = varargin{1};
+                    inputSet = varargin{2};
+                    obj.reachMethod = varargin{3};
+                    obj.numCores = varargin{4};
+                    obj.relaxFactor = varargin{5};                   
                  
                 otherwise 
                     
-                    error('Invalid number of input arguments, the number should be 1, 2 or 3');
+                    error('Invalid number of input arguments, the number should be 1, 2, 3 or 4');
                 
             end       
             
@@ -376,7 +384,7 @@ classdef SEGNET < handle
                 fprintf('\nPerforming analysis for Layer %d (%s)...', i-1, obj.Layers{i-1}.Name);
                 start_time = tic;
                 if ~isa(obj.Layers{i-1}, 'PixelClassificationLayer')
-                    rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption);
+                    rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption, obj.relaxFactor);
                 else
                     obj.reachSet = rs; % save reachable set before pixel classification layer
                     rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption);
@@ -417,26 +425,37 @@ classdef SEGNET < handle
             % update: 5/29/2020
             
             switch nargin
+                case 6
+                    obj = varargin{1};
+                    in_images = varargin{2};
+                    ground_truths = varargin{3};
+                    method = varargin{4};
+                    nCores = varargin{5};
+                    rF = varargin{6}; % relaxFactor
+                
                 case 5
                     obj = varargin{1};
                     in_images = varargin{2};
                     ground_truths = varargin{3};
                     method = varargin{4};
                     nCores = varargin{5};
+                    rF = 0;
                 case 4
                     obj = varargin{1};
                     in_images = varargin{2};
                     ground_truths = varargin{3};
                     method = varargin{4};
                     nCores = 1;
+                    rF = 0;
                 case 3
                     obj = varargin{1};
                     in_images = varargin{2};
                     ground_truths = varargin{3};
                     method = 'approx-star';
                     nCores = 1;
+                    rF = 0;
                 otherwise
-                    error("Invalid number of input arguments");
+                    error("Invalid number of input arguments, should be 2, 3, 4, or 5");
             end
             
             n1 = length(ground_truths);
@@ -454,7 +473,7 @@ classdef SEGNET < handle
             ver_rs = cell(1, n1);
                        
             % compute reachable set
-            obj.reach(in_images, method, nCores);
+            obj.reach(in_images, method, nCores, rF);
             
             % compute ground truth output segmentation image
             gr_seg_ims = obj.evaluate_parallel(ground_truths, nCores);
