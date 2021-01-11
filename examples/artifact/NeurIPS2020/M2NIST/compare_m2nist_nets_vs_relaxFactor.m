@@ -1,23 +1,22 @@
 
 %% Load and parse networks into NNV
-load('net_mnist_3_relu.mat');
-Nets = SEGNET.parse(net, 'net_mnist_3_relu_avgpool');
-load('net_mnist_3_relu_maxpool.mat');
-N2 = SEGNET.parse(net, 'net_mnist_3_relu_maxpool');
+load('m2nist_62iou_dilatedcnn_avgpool.mat');
+Nets = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
+load('m2nist_75iou_transposedcnn_avgpool.mat');
+N2 = SEGNET.parse(net, 'm2nist_75iou_transposedcnn_avgpool');
 Nets = [Nets N2];
-load('mnist_dilated_net_21_later_83iou');
-N3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
+load('m2nist_dilated_72iou_24layer.mat');
+N3 = SEGNET.parse(net, 'm2nist_dilated_72iou_24layer.mat');
 Nets = [Nets N3];
-load('test_images.mat');
+load('m2nist_6484_test_images.mat');
 
 
 Nmax = 20; % maximum allowable number of attacked pixels
-de = 0.002; % size of input set
+de = 0.00001; % size of input set
 
 
 %% create input set
 N = 20; % number of tested images 
-
 
 IS(N) = ImageStar;
 GrTruth = cell(1,N);
@@ -26,12 +25,12 @@ for l=1:N
     flag = 0;
     im = im_data(:,:,l);
     at_im = im;
-    for i=1:28
-        for j=1:28
+    for i=1:64
+        for j=1:84
             if im(i,j) > 150
                 at_im(i,j) = 0;
                 ct = ct + 1;
-                if ct == Nmax
+                if ct == Nmax(k)
                     flag = 1;
                     break;
                 end
@@ -109,7 +108,7 @@ Verification_Results = [];
 for i=1:N1
    
     T = table;
-    str = sprintf("N%d", i);
+    str = sprintf("N%d", i+3);
     ID = [str];
     for j=1:N2
         ID = [ID; str];
@@ -162,7 +161,7 @@ for i=1:N
     [rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4] = get_verification_result(Verification_Results, i);
     net_id = floor((i-1)/(N2+1)) + 1;
     if i== 1 || i == 6 || i == 11
-        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_%d}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', net_id, rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
+        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_%d}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', net_id + 3, rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
     else
         str = sprintf(' & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
     end
@@ -173,3 +172,25 @@ for i=1:N
 end
 fclose(fileID);
 
+function [rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4] = get_verification_result(VR, i)
+    % VR: verification results
+    % i : row index  
+    vr = VR(i,:);
+    rf = vr.RelaxFactor;
+    a1 = vr.Relax_Star_Random(1);
+    a2 = vr.Relax_Star_Random(2);
+    a3 = vr.Relax_Star_Random(3);
+    a4 = vr.Relax_Star_Random(4);
+    b1 = vr.Relax_Star_Area(1);
+    b2 = vr.Relax_Star_Area(2);
+    b3 = vr.Relax_Star_Area(3);
+    b4 = vr.Relax_Star_Area(4);
+    c1 = vr.Relax_Star_Range(1);
+    c2 = vr.Relax_Star_Range(2);
+    c3 = vr.Relax_Star_Range(3);
+    c4 = vr.Relax_Star_Range(4);
+    d1 = vr.Relax_Star_Bound(1);
+    d2 = vr.Relax_Star_Bound(2);
+    d3 = vr.Relax_Star_Bound(3);
+    d4 = vr.Relax_Star_Bound(4);
+end
