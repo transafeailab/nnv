@@ -1,4 +1,4 @@
-
+clc;clear;
 %% Load and parse networks into NNV
 load('net_mnist_3_relu.mat');
 Nets = SEGNET.parse(net, 'net_mnist_3_relu_avgpool');

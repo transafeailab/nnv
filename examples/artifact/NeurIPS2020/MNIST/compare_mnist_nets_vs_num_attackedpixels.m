@@ -129,7 +129,7 @@ subplot(2,3,3); % avg_IoU
 for i=1:L
     p = plot(avg_numAttPixels(i,:), avg_RIoU(i,:), markers{i}, 'Color', color(i));
     xlabel('$\overline{N}_{attackedpixels}$', 'interpreter', 'latex');
-    ylabel('$overline{R}_{IoU}$', 'interpreter', 'latex');
+    ylabel('$\overline{R}_{IoU}$', 'interpreter', 'latex');
     xticks(Nmax);
     xlim([Nmax(1) Nmax(M)]);
     title(titles{3});
