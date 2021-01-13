@@ -48,8 +48,8 @@ for l=1:N
     GrTruth{l} = im;
 end
 
-nnvNet.reach(ISs, 'relax-star-range', 4, 0.5);
-%[rb, n_mis, n_rb, vr_rs] = nnvNet.verify(ISs, GrTruth, 'approx-star', 4);
+%nnvNet.reach(ISs, 'relax-star-range', 4, 0.5);
+[riou, rv, rs, n_rb, n_mis, n_unk, n_att, ver_rs] = nnvNet.verify(ISs, GrTruth, 'approx-star', 4);
 %nnvNet.plotSegmentationImage(im); % plot segmentation image for the input image without attack
 %nnvNet.plotPixelClassificationReachSet(1); % plot the pixel classification reachable set corresponding to the first input set
 %nnvNet.plotVerifiedOutputSet(1); % plot the first verified output set corresponding to the first input set

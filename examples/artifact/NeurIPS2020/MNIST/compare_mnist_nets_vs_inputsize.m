@@ -60,6 +60,7 @@ for k=1:M
 end
 
 %% Verify networks
+avg_RIoU = zeros(L, M); % average RIoU corresponding to the input size
 avg_RV = zeros(L, M); % average RV corresponding to the input size
 avg_RS = zeros(L, M); % average RS corresponding to the input size
 avg_numRbPixels = zeros(L, M); % average number of robust pixels
@@ -77,6 +78,7 @@ for i=1:L
     for k=1:M
         t = tic;
         Nets(i).verify(IS{k}, GrTruth{k}, 'approx-star', numCores);
+        avg_RIoU(i, k) = sum(Nets(i).RIoU)/(N);
         avg_RV(i, k) = sum(Nets(i).RV)/(N);
         avg_RS(i, k) = sum(Nets(i).RS)/(N);
         avg_numRbPixels(i,k) = sum(Nets(i).numRbPixels)/(N);
@@ -123,10 +125,10 @@ end
 legend(labels{1:L}, 'interpreter', 'latex');
 hold off;
 
-subplot(2,3,3); % VT
+subplot(2,3,3); % avg_RIoU
 for i=1:L
-    p = plot(de, VT(i,:), markers{i}, 'Color', color(i));
-    ylabel('$VT$', 'interpreter', 'latex');
+    p = plot(de, avg_RIoU(i,:), markers{i}, 'Color', color(i));
+    ylabel('$\overline{R}_{IoU}$', 'interpreter', 'latex');
     xlabel('$\Delta_{\epsilon}$', 'interpreter', 'latex');
     xticks(de);
     xlim([de(1) de(M)]);
@@ -176,6 +178,20 @@ legend(labels{1:L}, 'interpreter', 'latex');
 hold off;
 
 saveas(fig, 'compare_mnist_nets_vs_inputsize.pdf');
+
+fig2 = figure;
+for i=1:L
+    p = plot(de, VT(i,:), markers{i}, 'Color', color(i));
+    ylabel('$VT$', 'interpreter', 'latex');
+    xlabel('$\Delta_{\epsilon}$', 'interpreter', 'latex');
+    xticks(de);
+    xlim([de(1) de(M)]);
+    hold on;
+end
+legend(labels{1:L}, 'interpreter', 'latex');
+hold off;
+saveas(fig2, 'VT_mnist_nets_vs_inputsize.pdf');
+
 %% plot verified output set
 
 Nets(1).plotVerifiedOutputSet(2);

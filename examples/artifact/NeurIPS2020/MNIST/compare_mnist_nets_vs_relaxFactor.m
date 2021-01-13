@@ -1,22 +1,25 @@
 
+clc; clear;
+
 %% Load and parse networks into NNV
 load('net_mnist_3_relu.mat');
 Nets = SEGNET.parse(net, 'net_mnist_3_relu_avgpool');
-load('net_mnist_3_relu_maxpool.mat');
-N2 = SEGNET.parse(net, 'net_mnist_3_relu_maxpool');
-Nets = [Nets N2];
-load('mnist_dilated_net_21_later_83iou');
-N3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
-Nets = [Nets N3];
+%load('net_mnist_3_relu_maxpool.mat');
+%N2 = SEGNET.parse(net, 'net_mnist_3_relu_maxpool');
+%Nets = [Nets N2];
+%load('mnist_dilated_net_21_later_83iou');
+%N3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
+%Nets = [Nets N3];
 load('test_images.mat');
 
 
-Nmax = 20; % maximum allowable number of attacked pixels
-de = 0.002; % size of input set
+Nmax = 100; % maximum allowable number of attacked pixels
+de = 0.005	; % size of input set
 
+Nt = 100;
 
 %% create input set
-N = 20; % number of tested images 
+N = 1; % number of tested images 
 
 
 IS(N) = ImageStar;
@@ -28,7 +31,7 @@ for l=1:N
     at_im = im;
     for i=1:28
         for j=1:28
-            if im(i,j) > 150
+            if im(i,j) > Nt
                 at_im(i,j) = 0;
                 ct = ct + 1;
                 if ct == Nmax
@@ -56,8 +59,9 @@ end
 
 %%
 
-Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
-RFs = [0.25; 0.5; 0.75; 1]; % relaxation factor
+%Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
+Methods = ["relax-star-random"];
+RFs = [1]; % relaxation factor
 
 N1 = length(Nets);
 N2 = length(Methods);
@@ -75,18 +79,19 @@ VT0 = zeros(N1, 1);
 %% Verify networks
 
 c = parcluster('local');
-numCores = c.NumWorkers;
+numCores = 1;
+%RVnumCores = c.NumWorkers;
 
 % verify N1 networks in the Nets array using the original approx-star approach
-t1 = tic;
-for i=1:N1
-    t = tic;
-    [rv, rs, ~, ~, ~, ~, ~] = Nets(i).verify(IS, GrTruth, 'approx-star', numCores);
-    RV0(i) = sum(rv)/length(rv);
-    RS0(i) = sum(rs)/length(rv);
-    VT0(i) = toc(t);
-end
-total_VT0 = toc(t1);
+% t1 = tic;
+% for i=1:N1
+%     t = tic;
+%     [rv, rs, ~, ~, ~, ~, ~] = Nets(i).verify(IS, GrTruth, 'approx-star', numCores);
+%     RV0(i) = sum(rv)/length(rv);
+%     RS0(i) = sum(rs)/length(rv);
+%     VT0(i) = toc(t);
+% end
+% total_VT0 = toc(t1);
 
 % verify N1 networks in the Nets array using the relax-star approach
 t2 = tic;

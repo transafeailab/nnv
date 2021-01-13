@@ -32,6 +32,7 @@ classdef SEGNET < handle
         numClasses = 0;
         
         % used for plot robustness information
+        RIoU = []; % robust IoU
         RV = []; % robustness value in percentage
         RS = []; % robustness sensitivity
         numMisPixels = []; % number of missclassified pixels
@@ -387,10 +388,11 @@ classdef SEGNET < handle
                     rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption, obj.relaxFactor);
                 else
                     obj.reachSet = rs; % save reachable set before pixel classification layer
-                    rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption);
+                    rs_new = obj.Layers{i-1}.reach(rs, obj.reachMethod, obj.reachOption, obj.relaxFactor);
                     obj.pixelClassificationReachSet = rs_new;
                 end
                 rs = rs_new;
+                
                 obj.reachTime(i-1) = toc(start_time);
                 fprintf('\nReachability analysis for Layer %d (%s) is done in %.5f seconds', i-1, obj.Layers{i-1}.Name, obj.reachTime(i-1));
                 fprintf('\nThe number of reachable sets at Layer %d (%s) is: %d', i-1, obj.Layers{i-1}.Name, length(rs));
@@ -407,11 +409,13 @@ classdef SEGNET < handle
     
     methods % verifier
         
-        function [rv, rs, n_rb, n_mis, n_unk, n_att, ver_rs] = verify(varargin)
+        function [riou, rv, rs, n_rb, n_mis, n_unk, n_att, ver_rs] = verify(varargin)
             % @in_images: an array of input set
             % @ground_truths: an array of ground truth images (without attack)
             % @method: reachability method
             % @nCores: number of cores used for computation
+            
+            % @riou: robust iou
             % @rv: robustness value (percentage of correctly classified pixels)
             % @rs: robustness sensitivity (ratio of (misclassified + unknown pixels)/attacked pixels)
             % @n_rb: number of robust pixels
@@ -464,6 +468,7 @@ classdef SEGNET < handle
                 error("Inconsistent number of ground truth images and input sets");
             end
             
+            riou = zeros(1,n1);
             rv = zeros(1, n1);
             rs = zeros(1, n1);
             n_rb = zeros(1, n1);
@@ -529,6 +534,9 @@ classdef SEGNET < handle
                     n_unk(i) = n_unk_ct;
                     n_rb_ct = n_pixels - n_mis_ct - n_unk_ct;
                     n_rb(i) = n_rb_ct;
+                    iou = jaccard(gr_seg_im, ver_im);
+                    iou = iou(~isnan(iou));
+                    riou(i) = sum(iou)/length(iou);
                     rv(i) = n_rb_ct/n_pixels;
                     rs(i) = (n_mis_ct + n_unk_ct)/n_att(i);
                 end
@@ -572,6 +580,9 @@ classdef SEGNET < handle
                     n_unk(i) = n_unk_ct;
                     n_rb_ct = n_pixels - n_mis_ct - n_unk_ct;
                     n_rb(i) = n_rb_ct;
+                    iou = jaccard(gr_seg_im, ver_im);
+                    iou = iou(iou(~isnan(iou)));
+                    riou(i) = sum(iou)/length(iou);
                     rv(i) = n_rb_ct/n_pixels;
                     rs(i) = (n_mis_ct + n_unk_ct)/n_att(i);
                 end
@@ -580,6 +591,7 @@ classdef SEGNET < handle
             
             obj.verifiedOutputSet = ver_rs;
             obj.groundTruthSegIms = gr_seg_ims;
+            obj.RIoU = riou;
             obj.RV = rv;
             obj.RS = rs;
             
