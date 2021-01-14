@@ -134,23 +134,86 @@ fprintf("The last column is the verification time of the relax-star-bound method
 writetable(N1_verifyTime);
 
 
-% %% Print latex table1
-% 
-% fileID = fopen('RelaxReachPerform.tex', 'w');
-% 
-% N = size(Verification_Results, 1);
-% for i=1:N
-%     [rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4] = get_verification_result(Verification_Results, i);
-%     net_id = floor((i-1)/(N2+1)) + 1;
-%     if i== 1 || i == 6 || i == 11
-%         str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_%d}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', net_id, rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
-%     else
-%         str = sprintf(' & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
-%     end
-%     
-%     fprintf(fileID, str);
-%     fprintf(fileID, '\n');
-%     
-% end
-% fclose(fileID);
-% 
+N1_verifyTime_improve = table;
+N1_verifyTime_improve.RelaxFactor = RFs;
+impr = [];
+for i=1:N2
+    vt1 = VT(1, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N1_verifyTime_improve.de_005 = impr;
+
+impr = [];
+for i=1:N2
+    vt1 = VT(2, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N1_verifyTime_improve.de_01 = impr;
+
+impr = [];
+for i=1:N2
+    vt1 = VT(3, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N1_verifyTime_improve.de_02 = impr;
+
+N1_verifyTime_improve
+writetable(N1_verifyTime_improve);
+
+%% Print latex table1
+
+fileID = fopen('N1_verifyTime_vs_relaxFactor.tex', 'w');
+
+N = size(N1_verifyTime, 1);
+for i=1:N
+    [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(N1_verifyTime, N1_verifyTime_improve, i);
+    if i== 1
+        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_1}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ \\\\\\\\ ', rf, a11, a21, a31, a41, b11, b21, b31, b41, c11, c21, c31, c41); 
+    else
+        str = sprintf(' & $%2.2f$ & %2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}) &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%})$   \\\\\\\\ ', rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42); 
+    end
+    
+    fprintf(fileID, str);
+    fprintf(fileID, '\n');
+    
+end
+fclose(fileID);
+
+function [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(VT, VT_impr, i)
+    % vt: verification results
+    % i : row index  
+    vt = VT(i,:);
+    vt_impr = VT_impr(i, :);
+    rf = vt.RelaxFactor;
+    a11 = vt.de_005(1);
+    a21 = vt.de_005(2);
+    a31 = vt.de_005(3);
+    a41 = vt.de_005(4);
+    b11 = vt.de_01(1);
+    b21 = vt.de_01(2);
+    b31 = vt.de_01(3);
+    b41 = vt.de_01(4);
+    c11 = vt.de_02(1);
+    c21 = vt.de_02(2);
+    c31 = vt.de_02(3);
+    c41 = vt.de_02(4);
+    
+    a12 = vt_impr.de_005(1);
+    a22 = vt_impr.de_005(2);
+    a32 = vt_impr.de_005(3);
+    a42 = vt_impr.de_005(4);
+    b12 = vt_impr.de_01(1);
+    b22 = vt_impr.de_01(2);
+    b32 = vt_impr.de_01(3);
+    b42 = vt_impr.de_01(4);
+    c12 = vt_impr.de_02(1);
+    c22 = vt_impr.de_02(2);
+    c32 = vt_impr.de_02(3);
+    c42 = vt_impr.de_02(4);
+end
