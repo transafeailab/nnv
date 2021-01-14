@@ -581,7 +581,7 @@ classdef SEGNET < handle
                     n_rb_ct = n_pixels - n_mis_ct - n_unk_ct;
                     n_rb(i) = n_rb_ct;
                     iou = jaccard(gr_seg_im, ver_im);
-                    iou = iou(iou(~isnan(iou)));
+                    iou = iou(~isnan(iou));
                     riou(i) = sum(iou)/length(iou);
                     rv(i) = n_rb_ct/n_pixels;
                     rs(i) = (n_mis_ct + n_unk_ct)/n_att(i);
