@@ -1,4 +1,4 @@
-
+clc; clear;
 %% Load and parse networks into NNV
 load('m2nist_62iou_dilatedcnn_avgpool.mat');
 Nets = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
@@ -178,11 +178,12 @@ end
 legend(labels{1:L}, 'interpreter', 'latex');
 hold off;
 
-saveas(fig, 'compare_mnist_nets_vs_num_attackedpixels.pdf');
+saveas(fig, 'compare_m2nist_nets_vs_num_attackedpixels.pdf');
 %% plot reach time
 
 N1 = Nets(1);
 N2 = Nets(2);
+N3 = Nets(3);
 
 N1_relu_reachTime = N1.reachTime(4) + N1.reachTime(8) + N1.reachTime(12);
 N1_others_reachTime = sum(N1.reachTime) - N1_relu_reachTime; 
@@ -192,3 +193,30 @@ N2_relu_reachTime = 0;
 for i=1:length(relu_id)
     N2_relu_reachTime = N2_relu_reachTime + N2.reachTime(relu_id(i));
 end
+N2_others_reachTime = sum(N2.reachTime) - N2_relu_reachTime;
+
+relu_id = [4 8 12 16 20];
+N3_relu_reachTime = 0;
+for i=1:length(relu_id)
+    N3_relu_reachTime = N3_relu_reachTime + N3.reachTime(relu_id(i));
+end
+N3_others_reachTime = sum(N3.reachTime) - N3_relu_reachTime;
+
+fig = figure;
+subplot(1,2,1);
+for i=1:L
+    p = plot(avg_numAttPixels(i,:), VT(i,:), markers{i}, 'Color', color(i));
+    xlabel('$\overline{N}_{attackedpixels}$', 'interpreter', 'latex');
+    ylabel('$VT$', 'interpreter', 'latex');
+    xticks(Nmax);
+    xlim([Nmax(1) Nmax(M)]);
+    title(titles{1});
+    hold on;
+end
+legend(labels{1:L}, 'interpreter', 'latex');
+hold off;
+subplot(1,2,2);
+y = [N1_relu_reachTime N1_others_reachTime; N2_relu_reachTime N2_others_reachTime; N3_relu_reachTime N3_others_reachTime];
+bar(y)
+set(gca, 'XTickLabel', ['N_4'; 'N_5'; 'N_6']);
+title(titles{2});
