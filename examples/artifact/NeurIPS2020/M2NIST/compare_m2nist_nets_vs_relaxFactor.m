@@ -2,33 +2,33 @@ clc; clear;
 %% Load and parse networks into NNV
 Nets = [];
 %load('m2nist_62iou_dilatedcnn_avgpool.mat');
-%Nets = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
+%net1 = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
 load('m2nist_75iou_transposedcnn_avgpool.mat');
-N2 = SEGNET.parse(net, 'm2nist_75iou_transposedcnn_avgpool');
-Nets = [Nets N2];
+net2 = SEGNET.parse(net, 'm2nist_75iou_transposedcnn_avgpool');
+% Nets = [Nets net2];
 %load('m2nist_dilated_72iou_24layer.mat');
 %N3 = SEGNET.parse(net, 'm2nist_dilated_72iou_24layer.mat');
 %Nets = [Nets N3];
 load('m2nist_6484_test_images.mat');
 
-
-Nmax = 10; % maximum allowable number of attacked pixels
-de = 0.01; % size of input set
-
+Nmax = 50; % maximum allowable number of attacked pixels
+%de = [0.005; 0.01; 0.02]	; % size of input set
+de = [0.001; 0.0015; 0.002];
+Nt = 150;
 
 %% create input set
-N = 1; % number of tested images 
+N1 = length(de);  
 
-IS(N) = ImageStar;
-GrTruth = cell(1,N);
-for l=1:N
+IS(N1) = ImageStar;
+GrTruth = cell(1,N1);
+for l=1:N1
     ct = 0;
     flag = 0;
     im = im_data(:,:,l);
     at_im = im;
     for i=1:64
         for j=1:84
-            if im(i,j) > 150
+            if im(i,j) > Nt
                 at_im(i,j) = 0;
                 ct = ct + 1;
                 if ct == Nmax
@@ -51,27 +51,21 @@ for l=1:N
     d = [1; de-1];
     S = ImageStar(V, C, d, 1-de, 1);
     IS(l) = S; 
-    GrTruth{l} = im;
+    GrTruth{l} = {im};
 end
 
 %%
 
-%Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
-Methods = ["relax-star-random"];
-RFs = [0.5; 1]; % relaxation factor
-
-N1 = length(Nets);
+Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
 N2 = length(Methods);
+RFs = [0; 0.25; 0.5; 0.75; 1]; % relaxation factor
 N3 = length(RFs);
 
 % relax-star results
+RIoU = zeros(N1, N2, N3); % average robust IoU
 RV = zeros(N1, N2, N3); % average robustness value for N images
 RS = zeros(N1, N2, N3); % average robustness sensitivity for N images
 VT = zeros(N1, N2, N3);
-% original approx-star results (no relaxation)
-RV0 = zeros(N1, 1);
-RS0 = zeros(N1, 1);
-VT0 = zeros(N1, 1); 
 
 %% Verify networks
 
@@ -79,16 +73,7 @@ c = parcluster('local');
 %numCores = c.NumWorkers;
 numCores = 1;
 
-% % verify N1 networks in the Nets array using the original approx-star approach
-% t1 = tic;
-% for i=1:N1
-%     t = tic;
-%     [rv, rs, ~, ~, ~, ~, ~] = Nets(i).verify(IS, GrTruth, 'approx-star', numCores);
-%     RV0(i) = sum(rv)/length(rv);
-%     RS0(i) = sum(rs)/length(rv);
-%     VT0(i) = toc(t);
-% end
-% total_VT0 = toc(t1);
+
 
 % verify N1 networks in the Nets array using the relax-star approach
 t2 = tic;
@@ -96,7 +81,8 @@ for i=1:N1
     for j=1:N2
         for k=1:N3
             t = tic;
-            [rv, rs, ~, ~, ~, ~, ~] = Nets(i).verify(IS, GrTruth, Methods(j), numCores, RFs(k));
+            [riou, rv, rs, ~, ~, ~, ~, ~] = net1.verify(IS(i), GrTruth{1,i}, Methods(j), numCores, RFs(k));
+            RIoU(i, j, k) = sum(riou)/length(riou);
             RV(i, j, k) = sum(rv)/length(rv); 
             RS(i, j, k) = sum(rs)/length(rv);
             VT(i,j,k) = toc(t);
@@ -106,67 +92,87 @@ end
 total_VT = toc(t2);
 
 %% print results
-fprintf("======================== VERIFICATION RESULTS ============================")
-Verification_Results = [];
-for i=1:N1
+fprintf("======================== VERIFICATION TIME IMPROVEMENT FOR NETWORK N5 ============================")
    
-    T = table;
-    str = sprintf("N%d", i+3);
-    ID = [str];
-    for j=1:N2
-        ID = [ID; str];
-    end
-    T.Networks = ID;
-    
-    T.RelaxFactor = [0; RFs];
-    rv = [RV0(i); reshape(RV(i, 1, :), [N2, 1])];
-    rs = [RS0(i); reshape(RS(i, 1, :), [N2, 1])];
-    vt = [VT0(i); reshape(VT(i, 1, :), [N2, 1])];
-    impr = (-100*(vt - VT0(i)))/VT0(i);
-    T.Relax_Star_Random = [rv rs vt impr];
-    %
-    rv = [RV0(i); reshape(RV(i, 2, :), [N2, 1])];
-    rs = [RS0(i); reshape(RS(i, 2, :), [N2, 1])];
-    vt = [VT0(i); reshape(VT(i, 2, :), [N2, 1])];
-    impr = (-100*(vt - VT0(i)))/VT0(i);
-    T.Relax_Star_Area = [rv rs vt impr];
-    %
-    rv = [RV0(i); reshape(RV(i, 3, :), [N2, 1])];
-    rs = [RS0(i); reshape(RS(i, 3, :), [N2, 1])];
-    vt = [VT0(i); reshape(VT(i, 3, :), [N2, 1])];
-    impr = (-100*(vt - VT0(i)))/VT0(i);
-    T.Relax_Star_Range = [rv rs vt impr];
-    %
-    rv = [RV0(i); reshape(RV(i, 4, :), [N2, 1])];
-    rs = [RS0(i); reshape(RS(i, 4, :), [N2, 1])];
-    vt = [VT0(i); reshape(VT(i, 4, :), [N2, 1])];
-    impr = (-100*(vt - VT0(i)))/VT0(i);
-    T.Relax_Star_Bound = [rv rs vt impr];
-
-    Verification_Results= [Verification_Results; T];
+N5_verifyTime = table; 
+N5_verifyTime.RelaxFactor = RFs;
+vt = [];
+for i=1:N2
+    vt1 = VT(1, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    vt = [vt vt1];
 end
-Verification_Results
-fprintf("*** NOTE FOR EACH APPROACH ***\n");
-fprintf("The firt column is the average Robustness Value (RV)\n")
-fprintf("The second column is the average Robustness Sensitivity (RS)\n");
-fprintf("The third column is the Verification Time (VT)\n");
-fprintf("The last column is the improvement in percentage of the Verification Time (VT)\n");
+N5_verifyTime.de_005 = vt;
 
-writetable(Verification_Results);
+vt = [];
+for i=1:N2
+    vt1 = VT(2, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    vt = [vt vt1];
+end
+N5_verifyTime.de_01 = vt;
 
+vt = [];
+for i=1:N2
+    vt1 = VT(3, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    vt = [vt vt1];
+end
+N5_verifyTime.de_02 = vt;
+
+N5_verifyTime
+
+fprintf("*** NOTE FOR EACH DELTA (de) ***\n");
+fprintf("The firt column is the verification time of the relax-star-random method \n")
+fprintf("The second column is the verification time of the relax-star-area method \n");
+fprintf("The third column is the verification time of the relax-star-range method \n");
+fprintf("The last column is the verification time of the relax-star-bound method \n");
+writetable(N5_verifyTime);
+
+
+N5_verifyTime_improve = table;
+N5_verifyTime_improve.RelaxFactor = RFs;
+impr = [];
+for i=1:N2
+    vt1 = VT(1, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N5_verifyTime_improve.de_005 = impr;
+
+impr = [];
+for i=1:N2
+    vt1 = VT(2, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N5_verifyTime_improve.de_01 = impr;
+
+impr = [];
+for i=1:N2
+    vt1 = VT(3, i, :);
+    vt1 = reshape(vt1, [N3, 1]);
+    impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
+    impr = [impr impr1];
+end
+N5_verifyTime_improve.de_02 = impr;
+
+N5_verifyTime_improve
+writetable(N5_verifyTime_improve);
 
 %% Print latex table1
 
-fileID = fopen('RelaxReachPerform.tex', 'w');
+fileID = fopen('N5_verifyTime_vs_relaxFactor.tex', 'w');
 
-N = size(Verification_Results, 1);
+N = size(N5_verifyTime, 1);
 for i=1:N
-    [rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4] = get_verification_result(Verification_Results, i);
-    net_id = floor((i-1)/(N2+1)) + 1;
-    if i== 1 || i == 6 || i == 11
-        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_%d}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', net_id + 3, rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
+    [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(N5_verifyTime, N5_verifyTime_improve, i);
+    if i== 1
+        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_5}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ \\\\\\\\ ', rf, a11, a21, a31, a41, b11, b21, b31, b41, c11, c21, c31, c41); 
     else
-        str = sprintf(' & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $\\\\color{blue}{\\\\downarrow %2.1f\\\\%%%%}$ \\\\\\\\ ', rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4); 
+        str = sprintf(' & $%2.2f$ & $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$   \\\\\\\\ ', rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42); 
     end
     
     fprintf(fileID, str);
@@ -175,25 +181,35 @@ for i=1:N
 end
 fclose(fileID);
 
-function [rf, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4] = get_verification_result(VR, i)
-    % VR: verification results
+function [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(VT, VT_impr, i)
+    % vt: verification results
     % i : row index  
-    vr = VR(i,:);
-    rf = vr.RelaxFactor;
-    a1 = vr.Relax_Star_Random(1);
-    a2 = vr.Relax_Star_Random(2);
-    a3 = vr.Relax_Star_Random(3);
-    a4 = vr.Relax_Star_Random(4);
-    b1 = vr.Relax_Star_Area(1);
-    b2 = vr.Relax_Star_Area(2);
-    b3 = vr.Relax_Star_Area(3);
-    b4 = vr.Relax_Star_Area(4);
-    c1 = vr.Relax_Star_Range(1);
-    c2 = vr.Relax_Star_Range(2);
-    c3 = vr.Relax_Star_Range(3);
-    c4 = vr.Relax_Star_Range(4);
-    d1 = vr.Relax_Star_Bound(1);
-    d2 = vr.Relax_Star_Bound(2);
-    d3 = vr.Relax_Star_Bound(3);
-    d4 = vr.Relax_Star_Bound(4);
+    vt = VT(i,:);
+    vt_impr = VT_impr(i, :);
+    rf = vt.RelaxFactor;
+    a11 = vt.de_005(1);
+    a21 = vt.de_005(2);
+    a31 = vt.de_005(3);
+    a41 = vt.de_005(4);
+    b11 = vt.de_01(1);
+    b21 = vt.de_01(2);
+    b31 = vt.de_01(3);
+    b41 = vt.de_01(4);
+    c11 = vt.de_02(1);
+    c21 = vt.de_02(2);
+    c31 = vt.de_02(3);
+    c41 = vt.de_02(4);
+    
+    a12 = vt_impr.de_005(1);
+    a22 = vt_impr.de_005(2);
+    a32 = vt_impr.de_005(3);
+    a42 = vt_impr.de_005(4);
+    b12 = vt_impr.de_01(1);
+    b22 = vt_impr.de_01(2);
+    b32 = vt_impr.de_01(3);
+    b42 = vt_impr.de_01(4);
+    c12 = vt_impr.de_02(1);
+    c22 = vt_impr.de_02(2);
+    c32 = vt_impr.de_02(3);
+    c42 = vt_impr.de_02(4);
 end
