@@ -957,7 +957,7 @@ classdef PosLin
             if isempty(I)
                 S = [];
             else
-                [lb, ub] = I.estimateRanges;           
+                [lb, ub] = I.estimateRanges;
                 % find all indexes having ub <= 0, then reset the
                 % values of the elements corresponding to these indexes to 0
                 if strcmp(dis_opt, 'display')

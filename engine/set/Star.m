@@ -1394,7 +1394,7 @@ classdef Star
         
         % quickly estimate lower bound and upper bound vector of state
         % variables
-        function [lb, ub] = estimateRanges(obj)
+        function [lb, ub] = estimateBounds(obj)
             
             % author: Dung Tran
             % date: 7/19/2019
@@ -1417,7 +1417,7 @@ classdef Star
         
         % estimate ranges using clip method from Stanley Bak
         % it is slower than the for-loop method
-        function [lb, ub] = estimateBounds(obj)
+        function [lb, ub] = estimateRanges(obj)
             % @lb: lowerbound vector
             % @ub: upper bound vector
             

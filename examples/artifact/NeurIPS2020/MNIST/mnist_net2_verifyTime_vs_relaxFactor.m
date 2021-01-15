@@ -1,18 +1,24 @@
+
 clc; clear;
+
 %% Load and parse networks into NNV
 Nets = [];
-%load('m2nist_62iou_dilatedcnn_avgpool.mat');
-%net1 = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
-load('m2nist_75iou_transposedcnn_avgpool.mat');
-net2 = SEGNET.parse(net, 'm2nist_75iou_transposedcnn_avgpool');
+% load('net_mnist_3_relu.mat');
+% net1 = SEGNET.parse(net, 'net_mnist_3_relu_avgpool');
+% Nets = [Nets net1];
+load('net_mnist_3_relu_maxpool.mat');
+net2 = SEGNET.parse(net, 'net_mnist_3_relu_maxpool');
 % Nets = [Nets net2];
-%load('m2nist_dilated_72iou_24layer.mat');
-%N3 = SEGNET.parse(net, 'm2nist_dilated_72iou_24layer.mat');
-%Nets = [Nets N3];
-load('m2nist_6484_test_images.mat');
+% load('mnist_dilated_net_21_later_83iou');
+% net3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
+% Nets = [Nets net3];
+load('test_images.mat');
+
 
 Nmax = 50; % maximum allowable number of attacked pixels
-de = [0.0001; 0.0005; 0.001];
+% de = [0.005; 0.01; 0.02]	; % size of input set
+%de = [0.001; 0.0015; 0.002];
+de = 0.005;
 Nt = 150;
 
 %% create input set
@@ -23,10 +29,10 @@ GrTruth = cell(1,N1);
 for l=1:N1
     ct = 0;
     flag = 0;
-    im = im_data(:,:,l);
+    im = im_data(:,:,1);
     at_im = im;
-    for i=1:64
-        for j=1:84
+    for i=1:28
+        for j=1:28
             if im(i,j) > Nt
                 at_im(i,j) = 0;
                 ct = ct + 1;
@@ -55,7 +61,9 @@ end
 
 %%
 
-Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
+
+% Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
+Methods = ["relax-star-random"];
 N2 = length(Methods);
 RFs = [0; 0.25; 0.5; 0.75; 1]; % relaxation factor
 N3 = length(RFs);
@@ -65,14 +73,13 @@ RIoU = zeros(N1, N2, N3); % average robust IoU
 RV = zeros(N1, N2, N3); % average robustness value for N images
 RS = zeros(N1, N2, N3); % average robustness sensitivity for N images
 VT = zeros(N1, N2, N3);
+% original approx-star results (no relaxation)
 
 %% Verify networks
 
 c = parcluster('local');
-%numCores = c.NumWorkers;
 numCores = 1;
-
-
+%RVnumCores = c.NumWorkers;
 
 % verify N1 networks in the Nets array using the relax-star approach
 t2 = tic;
@@ -91,17 +98,17 @@ end
 total_VT = toc(t2);
 
 %% print results
-fprintf("======================== VERIFICATION TIME IMPROVEMENT FOR NETWORK N5 ============================")
+fprintf("======================== VERIFICATION TIME IMPROVEMENT FOR NETWORK N1 ============================")
    
-N5_verifyTime = table; 
-N5_verifyTime.RelaxFactor = RFs;
+N2_verifyTime = table; 
+N2_verifyTime.RelaxFactor = RFs;
 vt = [];
 for i=1:N2
     vt1 = VT(1, i, :);
     vt1 = reshape(vt1, [N3, 1]);
     vt = [vt vt1];
 end
-N5_verifyTime.de_005 = vt;
+N2_verifyTime.de_005 = vt;
 
 vt = [];
 for i=1:N2
@@ -109,7 +116,7 @@ for i=1:N2
     vt1 = reshape(vt1, [N3, 1]);
     vt = [vt vt1];
 end
-N5_verifyTime.de_01 = vt;
+N2_verifyTime.de_01 = vt;
 
 vt = [];
 for i=1:N2
@@ -117,20 +124,20 @@ for i=1:N2
     vt1 = reshape(vt1, [N3, 1]);
     vt = [vt vt1];
 end
-N5_verifyTime.de_02 = vt;
+N2_verifyTime.de_02 = vt;
 
-N5_verifyTime
+N2_verifyTime
 
 fprintf("*** NOTE FOR EACH DELTA (de) ***\n");
 fprintf("The firt column is the verification time of the relax-star-random method \n")
 fprintf("The second column is the verification time of the relax-star-area method \n");
 fprintf("The third column is the verification time of the relax-star-range method \n");
 fprintf("The last column is the verification time of the relax-star-bound method \n");
-writetable(N5_verifyTime);
+writetable(N2_verifyTime);
 
 
-N5_verifyTime_improve = table;
-N5_verifyTime_improve.RelaxFactor = RFs;
+N2_verifyTime_improve = table;
+N2_verifyTime_improve.RelaxFactor = RFs;
 impr = [];
 for i=1:N2
     vt1 = VT(1, i, :);
@@ -138,7 +145,7 @@ for i=1:N2
     impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
     impr = [impr impr1];
 end
-N5_verifyTime_improve.de_005 = impr;
+N2_verifyTime_improve.de_005 = impr;
 
 impr = [];
 for i=1:N2
@@ -147,7 +154,7 @@ for i=1:N2
     impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
     impr = [impr impr1];
 end
-N5_verifyTime_improve.de_01 = impr;
+N2_verifyTime_improve.de_01 = impr;
 
 impr = [];
 for i=1:N2
@@ -156,20 +163,20 @@ for i=1:N2
     impr1 = (-100)*(vt1 - vt1(1))/(vt1(1));
     impr = [impr impr1];
 end
-N5_verifyTime_improve.de_02 = impr;
+N2_verifyTime_improve.de_02 = impr;
 
-N5_verifyTime_improve
-writetable(N5_verifyTime_improve);
+N2_verifyTime_improve
+writetable(N2_verifyTime_improve);
 
 %% Print latex table1
 
-fileID = fopen('N5_verifyTime_vs_relaxFactor.tex', 'w');
+fileID = fopen('N2_verifyTime_vs_relaxFactor.tex', 'w');
 
-N = size(N5_verifyTime, 1);
+N = size(N2_verifyTime, 1);
 for i=1:N
-    [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(N5_verifyTime, N5_verifyTime_improve, i);
+    [rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42] = get_verifyTime(N2_verifyTime, N2_verifyTime_improve, i);
     if i== 1
-        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_5}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ \\\\\\\\ ', rf, a11, a21, a31, a41, b11, b21, b31, b41, c11, c21, c31, c41); 
+        str = sprintf('\\\\multirow{5}{*}{$\\\\mathbf{N_2}$} & $%2.2f$ & %2.2f &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  & $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ &  $%2.2f$  &  $%2.2f$  &  $%2.2f$ \\\\\\\\ ', rf, a11, a21, a31, a41, b11, b21, b31, b41, c11, c21, c31, c41); 
     else
         str = sprintf(' & $%2.2f$ & $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$ &  $%2.1f (\\\\color{blue}{\\\\downarrow %2.0f\\\\%%%%})$   \\\\\\\\ ', rf, a11, a12, a21, a22, a31, a32, a41, a42, b11, b12, b21, b22, b31, b32, b41, b42, c11, c12, c21, c22, c31, c32, c41, c42); 
     end
