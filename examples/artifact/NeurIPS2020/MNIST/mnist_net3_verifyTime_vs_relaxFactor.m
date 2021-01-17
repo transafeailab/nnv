@@ -17,8 +17,8 @@ load('test_images.mat');
 
 Nmax = 20; % maximum allowable number of attacked pixels
 de = [0.005; 0.01; 0.02]	; % size of input set
-%de = [0.001; 0.0015; 0.002];
-% de = 0.005;
+% de = [0.001; 0.0015; 0.002];
+% de = 0.02;
 Nt = 150;
 
 %% create input set
@@ -66,6 +66,7 @@ Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-st
 % Methods = ["relax-star-random"];
 N2 = length(Methods);
 RFs = [0; 0.25; 0.5; 0.75; 1]; % relaxation factor
+% RFs = [0; 1];
 N3 = length(RFs);
 
 % relax-star results
@@ -83,7 +84,7 @@ numCores = 1;
 
 % verify N1 networks in the Nets array using the relax-star approach
 t2 = tic;
-parfor i=1:N1
+for i=1:N1
     for j=1:N2
         for k=1:N3
             t = tic;
@@ -98,7 +99,7 @@ end
 total_VT = toc(t2);
 
 %% print results
-fprintf("======================== VERIFICATION TIME IMPROVEMENT FOR NETWORK N1 ============================")
+fprintf("======================== VERIFICATION TIME IMPROVEMENT FOR NETWORK N3 ============================")
    
 N3_verifyTime = table; 
 N3_verifyTime.RelaxFactor = RFs;
