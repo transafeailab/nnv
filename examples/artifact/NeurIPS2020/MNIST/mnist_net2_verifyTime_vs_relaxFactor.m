@@ -16,9 +16,9 @@ load('test_images.mat');
 
 
 Nmax = 50; % maximum allowable number of attacked pixels
-% de = [0.005; 0.01; 0.02]	; % size of input set
+de = [0.005; 0.01; 0.02]	; % size of input set
 %de = [0.001; 0.0015; 0.002];
-de = 0.005;
+%de = 0.005;
 Nt = 150;
 
 %% create input set
@@ -62,8 +62,8 @@ end
 %%
 
 
-% Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
-Methods = ["relax-star-random"];
+Methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
+% Methods = ["relax-star-random"];
 N2 = length(Methods);
 RFs = [0; 0.25; 0.5; 0.75; 1]; % relaxation factor
 N3 = length(RFs);
@@ -83,7 +83,7 @@ numCores = 1;
 
 % verify N1 networks in the Nets array using the relax-star approach
 t2 = tic;
-for i=1:N1
+parfor i=1:N1
     for j=1:N2
         for k=1:N3
             t = tic;
