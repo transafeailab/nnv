@@ -3,12 +3,13 @@ clc; clear;
 Nets = [];
 load('m2nist_62iou_dilatedcnn_avgpool.mat');
 net1 = SEGNET.parse(net, 'm2nist_62iou_dilatedcnn_avgpool');
+Nets = [Nets net1];
 load('m2nist_75iou_transposedcnn_avgpool.mat');
 net2 = SEGNET.parse(net, 'm2nist_75iou_transposedcnn_avgpool');
 Nets = [Nets net2];
 load('m2nist_dilated_72iou_24layer.mat');
-N3 = SEGNET.parse(net, 'm2nist_dilated_72iou_24layer.mat');
-Nets = [Nets N3];
+net3 = SEGNET.parse(net, 'm2nist_dilated_72iou_24layer.mat');
+Nets = [Nets net3];
 load('m2nist_6484_test_images.mat');
 
 Nmax = 50; % maximum allowable number of attacked pixels
@@ -64,7 +65,7 @@ numCores = 1;
 for i=1:N2
     for j=1:N1
         Nets(i).reach(IS(j), "relax-star-random", 1, 0);
-        [ReLU_ReachTime(i, j), Other_ReachTime(i, j), Total_ReachTime(i, j)] = getReachTime(net);
+        [ReLU_ReachTime(i, j), Other_ReachTime(i, j), Total_ReachTime(i, j)] = getReachTime(Nets(i));
     end
 end
 
@@ -105,7 +106,7 @@ function [relu_reachTime, others_reachTime, total_reachTime] = getReachTime(net)
     relu_reachTime = 0;
     others_reachTime = 0; 
     for i=1:n
-        if isa(net.Layers{i}, 'ReLuLayer')
+        if isa(net.Layers{i}, 'ReluLayer')
             relu_reachTime = relu_reachTime + net.reachTime(i);
         else
             others_reachTime = others_reachTime + net.reachTime(i);

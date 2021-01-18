@@ -68,7 +68,7 @@ numCores = 1;
 for i=1:N2
     for j=1:N1
         Nets(i).reach(IS(j), "relax-star-random", 1, 0);
-        [ReLU_ReachTime(i, j), Other_ReachTime(i, j), Total_ReachTime(i, j)] = getReachTime(net);
+        [ReLU_ReachTime(i, j), Other_ReachTime(i, j), Total_ReachTime(i, j)] = getReachTime(Nets(i));
     end
 end
 
@@ -109,7 +109,7 @@ function [relu_reachTime, others_reachTime, total_reachTime] = getReachTime(net)
     relu_reachTime = 0;
     others_reachTime = 0; 
     for i=1:n
-        if isa(net.Layers{i}, 'ReLuLayer')
+        if isa(net.Layers{i}, 'ReluLayer')
             relu_reachTime = relu_reachTime + net.reachTime(i);
         else
             others_reachTime = others_reachTime + net.reachTime(i);
