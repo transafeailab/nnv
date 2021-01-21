@@ -4,6 +4,10 @@ if eps==0.1
     load IS_01.mat IS_01 Labels;
     IS = IS_01;
     Lbls = Labels;
+elseif eps==0.05
+    load IS_005.mat IS_005 Labels;
+    IS = IS_005;
+    Lbls = Labels;
 elseif eps==0.15
     load IS_015.mat IS_015 Labels;
     IS = IS_015;

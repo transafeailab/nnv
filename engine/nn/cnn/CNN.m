@@ -18,7 +18,7 @@ classdef CNN < handle
         reachMethod = 'approx-star';    % reachable set computation scheme, default - 'approx-star'
         relaxFactor = 0; % default - solve 100% LP optimization for finding bounds in 'approx-star' method
         reachOption = []; % parallel option, default - non-parallel computing
-        numCores = 0; % number of cores (workers) using in computation
+        numCores = 1; % number of cores (workers) using in computation
         reachSet = [];  % reachable set for each layers
         outputSet = [];
         reachTime = []; % computation time for each layers
@@ -659,8 +659,8 @@ classdef CNN < handle
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
-                    numOfCores = varargin{5};
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = varargin{5};
                     obj.relaxFactor = varargin{6}; % only for the approx-star method
                     obj.dis_opt = varargin{7}; % display option
                     obj.lp_solver = varargin{8}; 
@@ -668,8 +668,8 @@ classdef CNN < handle
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
-                    numOfCores = varargin{5};
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = varargin{5};
                     obj.relaxFactor = varargin{6}; % only for the approx-star method
                     obj.dis_opt = varargin{7}; % display option
                     
@@ -677,31 +677,31 @@ classdef CNN < handle
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
-                    numOfCores = varargin{5};
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = varargin{5};
                     obj.relaxFactor = varargin{6}; % only for the approx-star method
                     
                 case 5
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
-                    numOfCores = varargin{5};
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = varargin{5};
                     obj.relaxFactor = 0; % only for the approx-star method
                 case 4
                     obj = varargin{1};
                     in_images = varargin{2};
                     correct_ids = varargin{3};
-                    method = varargin{4};
-                    numOfCores = 1;
+                    obj.reachMethod = varargin{4};
+                    obj.numCores = 1;
                     obj.relaxFactor = 0; % only for the approx-star method
                 case 2
                     obj = varargin{1};
                     if isstruct(varargin{2})
                         in_images = varargin{2}.inputSets;
                         correct_ids = varargin{2}.correct_ids;
-                        method = varargin{2}.reachMethod;
-                        numOfCores = varargin{2}.numCores;
+                        obj.reachMethod = varargin{2}.reachMethod;
+                        obj.numCores = varargin{2}.numCores;
                         obj.relaxFactor = varargin{2}.relaxFactor; % only for the approx-star method
                         obj.dis_opt = varargin{2}.dis_opt; % display option
                         obj.lp_solver = varargin{2}.lp_solver; 
@@ -726,11 +726,12 @@ classdef CNN < handle
             cE = cell(1,N);
             cands = cell(1,N);
             vt = zeros(1,N);
-            if ~strcmp(method, 'exact-star')
-                if numOfCores > 1
+            if ~strcmp(obj.reachMethod, 'exact-star')
+                if obj.numCores > 1
+                    obj.start_pool;
                     parfor i=1:N
                         fprintf("\nVerifying %d^th image...",i);
-                        [rb(i),cE{i}, cands{i}, vt(i)] = obj.verifyRBN(in_images(i), correct_ids(i), method, 1, obj.relaxFactor, obj.dis_opt);
+                        [rb(i),cE{i}, cands{i}, vt(i)] = obj.verifyRBN(in_images(i), correct_ids(i), obj.reachMethod, 1, obj.relaxFactor, obj.dis_opt);
                         if rb(i) == 1
                             count(i) = 1;
                         else
@@ -740,7 +741,7 @@ classdef CNN < handle
                 else
                     for i=1:N
                         fprintf("\nVerifying %d^th image...",i);
-                        [rb(i),cE{i}, cands{i}, vt(i)] = obj.verifyRBN(in_images(i), correct_ids(i), method, numOfCores, obj.relaxFactor, obj.dis_opt);
+                        [rb(i),cE{i}, cands{i}, vt(i)] = obj.verifyRBN(in_images(i), correct_ids(i), obj.reachMethod, 1, obj.relaxFactor, obj.dis_opt);
                         if rb(i) == 1
                             count(i) = 1;
                         else
