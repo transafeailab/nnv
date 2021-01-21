@@ -30,7 +30,7 @@ for i=1:N1
 end
 total_VT = toc(t1);
 
-save mnist01_relaxation3.mat r VT;
+save mnist01_relax_star_area_vs_ERAN.mat r VT eps;
 %% Plot figures
 
 % % robustness
