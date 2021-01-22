@@ -9,7 +9,8 @@ load('mnist_dilated_net_21_later_83iou');
 N3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
 Nets = [Nets N3];
 load('test_images.mat');
-
+poolobj = gcp('nocreate');
+delete(poolobj); % reset parpool
 
 Nmax = 20; % maximum allowable number of attacked pixels
 de = [0.001 0.0015 0.002 0.0025 0.003]; % size of input set

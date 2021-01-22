@@ -9,7 +9,8 @@ load('mnist_dilated_net_21_later_83iou');
 N3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
 Nets = [Nets N3];
 load('test_images.mat');
-
+poolobj = gcp('nocreate');
+delete(poolobj); % reset parpool
 
 Nmax = [10 20 30 40 50]; % maximum allowable number of attacked pixels 
 M = length(Nmax);
@@ -188,8 +189,10 @@ for i=1:L
     xlim([Nmax(1) Nmax(M)]);
     hold on;
 end
-legend(labels{1:L}, 'interpreter', 'latex');
+legend(labels{1:L}, 'interpreter', 'latex', 'FontSize', 13);
 hold off;
+ax = gca;
+ax.FontSize = 13;
 saveas(fig2, 'VT_mnist_nets_vs_num_attackedpixels.pdf');
 %%
 

@@ -14,6 +14,8 @@ net3 = SEGNET.parse(net, 'mnist_dilated_net_21_later_83iou');
 Nets = [Nets net3];
 load('test_images.mat');
 
+poolobj = gcp('nocreate');
+delete(poolobj); % reset parpool
 
 Nmax = 50; % maximum allowable number of attacked pixels
 de = [0.005; 0.01]	; % size of input set
@@ -78,28 +80,28 @@ fig = figure;
 subplot(1,3,1);
 y = [ReLU_ReachTime(1,1) Other_ReachTime(1,1); ReLU_ReachTime(1,2) Other_ReachTime(1,2)];
 bar(y);
-ylabel('Reachability Time');
-xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex');
-set(gca, 'XTickLabel', {'0.005'; '0.01'});
-title('N_1');
+ylabel('Reachability Time (s)', 'FontSize', 13);
+xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+title('N_1', 'FontSize', 16);
 
 
 subplot(1,3,2);
 y = [ReLU_ReachTime(2,1) Other_ReachTime(2,1); ReLU_ReachTime(2,2) Other_ReachTime(2,2)];
 bar(y);
-ylabel('Reachability Time');
-xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex');
-set(gca, 'XTickLabel', {'0.005'; '0.01'});
-title('N_2');
+ylabel('Reachability Time (s)', 'FontSize', 13);
+xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+title('N_2', 'FontSize', 16);
 
 
 subplot(1,3,3);
 y = [ReLU_ReachTime(3,1) Other_ReachTime(3,1); ReLU_ReachTime(3,2) Other_ReachTime(3,2)];
 bar(y);
-ylabel('Reachability Time');
-xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex');
-set(gca, 'XTickLabel', {'0.005'; '0.01'});
-title('N_3');
+ylabel('Reachability Time (s)', 'FontSize', 13);
+xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+title('N_3', 'FontSize', 16);
 
 
 %% function for computing total ReLU reachTime and others reachTime
