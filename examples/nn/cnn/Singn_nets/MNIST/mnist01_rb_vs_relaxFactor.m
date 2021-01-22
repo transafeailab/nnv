@@ -32,7 +32,7 @@ for i=1:N1
 end
 total_VT = toc(t1);
 
-save mnist01_relaxation2.mat r VT;
+save mnist01_relaxation2.mat r VT N2 relaxFactor;
 %% Plot figures
 
 % robustness
@@ -41,8 +41,6 @@ rb_rand = reshape(r(1,:), [1, N2]);
 rb_area = reshape(r(2,:), [1, N2]);
 rb_range = reshape(r(3,:), [1, N2]);
 rb_bound = reshape(r(4,:), [1, N2]);
-rb_DeepZ = [0.47 0.47 0.47 0.47 0.47]; % result from ERAN
-rb_DeepPoly = [0.67 0.67 0.67 0.67 0.67]; % result from ERAN
 plot(relaxFactor, rb_rand, '-*');
 hold on;
 plot(relaxFactor, rb_area, '-x');
@@ -54,36 +52,9 @@ hold on;
 plot(relaxFactor, rb_DeepZ, '-v');
 hold on;
 plot(relaxFactor, rb_DeepPoly, '-+');
-legend('relax-star-random', 'relax-star-area', 'relax-star-range', 'relax-star-bound', 'DeepZ', 'DeepPoly');
+legend('relax-star-random', 'relax-star-area', 'relax-star-range', 'relax-star-bound');
 xlabel('Relaxation Factor (RF)');
 ylabel('Robustness');
-str = sprintf('\\epsilon = %.2f', eps);
-title(str)
-ax = gca; 
-ax.FontSize = 13;
-
-% verification time
-fig2 = figure;
-vt_rand = reshape(VT(1,:), [1, N2]);
-vt_area = reshape(VT(2,:), [1, N2]);
-vt_range = reshape(VT(3,:), [1, N2]);
-vt_bound = reshape(VT(4,:), [1, N2]);
-vt_DeepZ = [314.7 314.7 314.7 314.7 314.7]; % result from ERAN
-vt_DeepPoly = [136.5 136.5 136.5 136.5 136.5]; % result from ERAN
-plot(relaxFactor, vt_rand, '-*');
-hold on;
-plot(relaxFactor, vt_area, '-x');
-hold on;
-plot(relaxFactor, vt_range, '-o');
-hold on;
-plot(relaxFactor, vt_bound, '-s');
-hold on;
-plot(relaxFactor, vt_DeepZ, '-v');
-hold on;
-plot(relaxFactor, vt_DeepPoly, '-+');
-legend('relax-star-random', 'relax-star-area', 'relax-star-range', 'relax-star-bound', 'DeepZ', 'DeepPoly');
-xlabel('Relaxation Factor (RF)');
-ylabel('Verification Time (s)');
 str = sprintf('\\epsilon = %.2f', eps);
 title(str)
 ax = gca; 
