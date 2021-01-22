@@ -6,7 +6,8 @@ load mnist01.mat;
 numCores = 8; 
 N = 100; % number of Images tested maximum is 100
 %
-
+poolobj = gcp('nocreate');
+delete(poolobj); % reset parpool
 methods = ["relax-star-random", "relax-star-area", "relax-star-range", "relax-star-bound"];
 eps = [0.1 0.15]; % epsilon for the disturbance
 relaxFactor = [0 0.25 0.5 0.75 1]; % relax factor
