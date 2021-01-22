@@ -831,7 +831,7 @@ classdef PosLin
             if relaxFactor < 0 || relaxFactor > 1
                 error('Invalid relax factor');
             end
-
+            
             if isempty(I)
                 S = [];
             else
@@ -839,7 +839,6 @@ classdef PosLin
                 if isempty(lb) || isempty(ub)
                     S = [];
                 else
-                    
                     % find all indexes having ub <= 0, then reset the
                     % values of the elements corresponding to these indexes to 0
                     if strcmp(dis_opt, 'display')
@@ -850,7 +849,9 @@ classdef PosLin
                         fprintf('\n%d neurons with ub <= 0 are found by estimating ranges', length(map1));
                     end
                     map2 = find(lb < 0 & ub > 0);
-           
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\n%d neurons with lb < 0 & ub > 0 are found by estimating ranges', length(map2));
+                    end
                     n1  = round((1-relaxFactor)*length(map2)); % number of LP need to solve
 
                     if strcmp(dis_opt, 'display')
@@ -859,41 +860,39 @@ classdef PosLin
                     [~,midx] = sort(ub(map2)-lb(map2), 'descend');
                     map21 = map2(midx(1:n1)); % neurons with optimized ranged
                     map22 = map2(midx(n1+1:length(map2))); % neurons without optimized ranges
-
                     lb1 = lb(map22);
                     ub1 = ub(map22); 
-                    
+
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nOptimize upper bounds of %d neurons: ', length(map21));
+                    end
                     xmax = I.getMaxs(map21, option, dis_opt, lp_solver); 
                     map3 = find(xmax <= 0);
-                    if strcmp(dis_opt, 'display')
-                        fprintf('\n%d neurons (in %d neurons) with ub <= 0 are found by optimizing ranges', length(map3), length(map21));
-                    end
+
                     n = length(map3);
                     map4 = zeros(n,1);
                     for i=1:n
-                        map4(i) = map2(map3(i));
+                        map4(i) = map21(map3(i));
                     end
                     map11 = [map1; map4];
                     In = I.resetRow(map11); % reset to zero at the element having ub <= 0
-                    if strcmp(dis_opt, 'display')
-                        fprintf('\n(%d+%d =%d)/%d neurons have ub <= 0', length(map1), length(map3), length(map11), length(ub));
-                    end
 
                     % find all indexes that have lb < 0 & ub > 0, then
                     % apply the over-approximation rule for ReLU
-                    if strcmp(dis_opt, 'display')
-                        fprintf("\nFinding neurons (in %d neurons) with lb < 0 & ub >0: ", length(map21));
-                    end
-                    map5 = find(xmax > 0);
-                    map6 = map21(map5(:)); % all indexes having ub > 0
-                    xmax1 = xmax(map5(:)); % upper bound of all neurons having ub > 0
 
+                    map5 = find(xmax > 0);
+                    map6 = map21(map5); % all indexes having ub > 0
+                    xmax1 = xmax(map5); % upper bound of all neurons having ub > 0
+
+                    if strcmp(dis_opt, 'display')
+                        fprintf('\nOptimize lower bounds of %d neurons: ', length(map6));
+                    end
                     xmin = I.getMins(map6, option, dis_opt, lp_solver); 
                     map7 = find(xmin < 0); 
-                    map8 = map6(map7(:)); % all indexes having lb < 0 & ub > 0
-                    lb2 = xmin(map7(:));  % lower bound of all indexes having lb < 0 & ub > 0
-                    ub2 = xmax1(map7(:)); % upper bound of all neurons having lb < 0 & ub > 0
-                    
+                    map8 = map6(map7); % all indexes having lb < 0 & ub > 0
+                    lb2 = xmin(map7);  % lower bound of all indexes having lb < 0 & ub > 0
+                    ub2 = xmax1(map7); % upper bound of all neurons having lb < 0 & ub > 0
+
                     map9 = [map22; map8];
                     lb3 = [lb1; lb2];
                     ub3 = [ub1; ub2];
