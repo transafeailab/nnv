@@ -188,8 +188,10 @@ for i=1:L
     xlim([de(1) de(M)]);
     hold on;
 end
-legend(labels{1:L}, 'interpreter', 'latex');
+legend(labels{1:L}, 'interpreter', 'latex', 'FontSize', 13);
 hold off;
+ax = gca;
+ax.FontSize = 13;
 saveas(fig2, 'VT_mnist_nets_vs_inputsize.pdf');
 
 %% plot verified output set
