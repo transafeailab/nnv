@@ -72,6 +72,8 @@ VT = zeros(L, M); % verification time
 
 c = parcluster('local');
 numCores = c.NumWorkers;
+poolobj = gcp('nocreate');
+delete(poolobj); % reset parpool
 
 % verify L networks in the Nets array
 t1 = tic;
