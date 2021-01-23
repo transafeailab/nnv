@@ -82,7 +82,7 @@ y = [ReLU_ReachTime(1,1) Other_ReachTime(1,1); ReLU_ReachTime(1,2) Other_ReachTi
 bar(y);
 ylabel('Reachability Time (s)', 'FontSize', 13);
 xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
-set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 11);
 title('N_1', 'FontSize', 16);
 
 
@@ -91,7 +91,7 @@ y = [ReLU_ReachTime(2,1) Other_ReachTime(2,1); ReLU_ReachTime(2,2) Other_ReachTi
 bar(y);
 ylabel('Reachability Time (s)', 'FontSize', 13);
 xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
-set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 11);
 title('N_2', 'FontSize', 16);
 
 
@@ -100,7 +100,7 @@ y = [ReLU_ReachTime(3,1) Other_ReachTime(3,1); ReLU_ReachTime(3,2) Other_ReachTi
 bar(y);
 ylabel('Reachability Time (s)', 'FontSize', 13);
 xlabel('$\Delta_\epsilon$', 'Interpreter', 'latex', 'FontSize', 13);
-set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 13);
+set(gca, 'XTickLabel', {'0.005'; '0.01'}, 'FontSize', 11);
 title('N_3', 'FontSize', 16);
 
 
