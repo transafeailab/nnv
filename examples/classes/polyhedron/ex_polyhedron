@@ -1,0 +1,7 @@
+% creat a new polyhedron object using H-representation
+
+A = [1 0; -1 0; 0 1; 0 -1];
+b = [1; -1; 1; -1]; 
+
+% P = {x | Ax <= b, Aex = be}
+P = Polyhedron('A', A, 'b', b);
