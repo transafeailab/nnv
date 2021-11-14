@@ -56,10 +56,18 @@ classdef LayerS
         
         % Evaluation method
         function y = evaluate(obj, x)  % evaluation of this layer with a specific vector
-            if size(x, 1) ~= size(obj.W, 2) || size(x, 2) ~= 1
-                error('Invalid or inconsistent input vector')
+            if size(x, 1) ~= size(obj.W, 2)
+                error('Inconsistent input vector')
             end
-            y1 = obj.W * x + obj.b;            
+            y1 = obj.W * x;
+            if size(x, 2) ~= 1
+                n = size(x, 2);
+                for i=1:n
+                    y1(:,i) = y1(:,i) + obj.b;
+                end
+            else
+                y1 = y1 + obj.b;
+            end           
 
             if strcmp(obj.f, 'poslin')
                 y = poslin(y1);
@@ -73,13 +81,17 @@ classdef LayerS
                 y = tansig(y1);
             elseif strcmp(obj.f, 'logsig')
                 y = logsig(y1);
-            elseif strcmp(obj.f, 'purelin')   
-                y = y1;
             elseif strcmp(obj.f, 'softmax')
-                y = softmax(y1);
+                if isa(y1, 'dlarray')
+                    y = softmax(y1, 'DataFormat', 'C');
+                else
+                    y = softmax(y1);
+                end
             elseif strcmp(obj.f, 'leakyrelu')
                 y = y1;
                 y(find(y < 0)) = obj.gamma*y(find(y<0));
+            elseif strcmp(obj.f, 'sign')
+                y = sign(y1);
             else
                 error('Unknown or unsupported activation function');
             end 
@@ -153,11 +165,11 @@ classdef LayerS
                     error('Invalid number of input arguments (should be 2, 3, 4, 5, or 6)');
             end
             
-            if ~strcmp(method, 'exact-star') && ~strcmp(method, 'approx-star') && ~strcmp(method, 'approx-star-fast') && ~strcmp(method, 'approx-zono') && ~strcmp(method, 'abs-dom') && ~strcmp(method, 'exact-polyhedron') && ~strcmp(method, 'approx-star-split') && ~strcmp(method,'approx-star-no-split')
+            if ~strcmp(method, 'exact-star') && ~strcmp(method, 'approx-star') && ~strcmp(method, 'approx-star-fast') && ~contains(method, 'relax-star') && ~strcmp(method, 'approx-zono') && ~strcmp(method, 'abs-dom') && ~strcmp(method, 'exact-polyhedron') && ~strcmp(method, 'approx-star-split') && ~strcmp(method,'approx-star-no-split')
                 error('Unknown reachability analysis method');
             end
             
-            if strcmp(method, 'exact-star') && (~strcmp(obj.f, 'purelin') && ~strcmp(obj.f, 'leakyrelu') && ~strcmp(obj.f, 'poslin') && ~strcmp(obj.f, 'satlin') && ~strcmp(obj.f, 'satlins'))
+            if strcmp(method, 'exact-star') && (~strcmp(obj.f, 'purelin') && ~strcmp(obj.f, 'leakyrelu') && ~strcmp(obj.f, 'sign') && ~strcmp(obj.f, 'poslin') && ~strcmp(obj.f, 'satlin') && ~strcmp(obj.f, 'satlins'))
                 method = 'approx-star';
                 fprintf('\nThe current layer has %s activation function -> cannot compute exact reachable set for the current layer, we use approx-star method instead', obj.f);
             end
@@ -188,6 +200,8 @@ classdef LayerS
                         S = [S I1];
                     elseif strcmp(f1, 'poslin')
                         S = [S PosLin.reach(I1, method, [], rF, dis, lps)];
+                    elseif strcmp(f1, 'sign')
+                        S = [S Sign.reach(I1, method, [], rF, dis, lps)];
                     elseif strcmp(f1, 'satlin')
                         S = [S SatLin.reach(I1, method, [], dis, lps)];
                     elseif strcmp(f1, 'satlins')
@@ -222,6 +236,8 @@ classdef LayerS
                         S = [S I1];
                     elseif strcmp(f1, 'poslin')
                         S = [S PosLin.reach(I1, method, [], obj.relaxFactor, obj.dis_opt, obj.lp_solver)];
+                    elseif strcmp(f1, 'sign')
+                        S = [S Sign.reach(I1, method, [], obj.relaxFactor, obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'satlin')
                         S = [S SatLin.reach(I1, method, [], obj.dis_opt, obj.lp_solver)];
                     elseif strcmp(f1, 'satlins')

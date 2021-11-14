@@ -115,27 +115,47 @@ classdef BatchNormalizationLayer < handle
             
             % author: Dung Tran
             % date: 1/7/2020
+            % update: 9/15/2020 : update if the input is a star set
             
-            if ~isa(in_image, 'ImageStar')
-                error('Input is not an ImageStar');
-            end
             
             if isempty(obj.TrainedMean) || isempty(obj.TrainedVariance) || isempty(obj.Epsilon) || isempty(obj.Offset) || isempty(obj.Scale)
                 error('Batch Normalization Layer does not have enough parameters');
+            else
+                var = obj.TrainedVariance;
+                eps = obj.Epsilon;
+                mean = obj.TrainedMean;
+                scale = obj.Scale; 
+                offset = obj.Offset;
             end
             
-            var = obj.TrainedVariance;
-            eps = obj.Epsilon;
-            mean = obj.TrainedMean;
-            scale = obj.Scale; 
-            offset = obj.Offset;
-            l(1,1, obj.NumChannels) = 0;
-            for i=1:obj.NumChannels
-                l(1,1,i) = 1/sqrt(var(1,1,i) + eps);
+            
+            if isa(in_image, 'ImageStar')
+                          
+                l(1,1, obj.NumChannels) = 0;
+                for i=1:obj.NumChannels
+                    l(1,1,i) = 1/sqrt(var(1,1,i) + eps);
+                end
+                x = in_image.affineMap(l, -l.*mean);
+                image = x.affineMap(scale, offset);
+                
+            elseif isa(in_image, 'Star')
+                
+                error('Not implemented yet');
+                %l = 1 ./ sqrt(var + eps);
+                %x = in_image.affineMap(eye(in_image.dim), -mean);
+                
+                % V = in_image.V; (c + basis vectors)
+                % scale c and scale basis vectors
+                
+                %x = in_image.affineMap(l', zeros(in_image.dim, 1));
+                %image = x.affineMap(scale, offset);
+                
+            else
+                error('Input is not an ImageStar or Star');
             end
             
-            x = in_image.affineMap(l, -l.*mean);
-            image = x.affineMap(scale, offset);
+ 
+           
             
         end
         

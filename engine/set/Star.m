@@ -260,6 +260,11 @@ classdef Star
                         b1 = [I.be; -I.be];
                         obj = Star(V, [I.A; A1], [I.b; b1]);
                     end
+                    [lb, ub] = obj.getRanges;
+                    obj.predicate_lb = lb;
+                    obj.predicate_ub = ub;
+                    B = Box(lb, ub);
+                    obj.Z = B.toZono;
                 
                 case 0
                     % create empty Star (for preallocation an array of star)
@@ -292,7 +297,7 @@ classdef Star
             [~, ~, exitflag, ~] = linprog(f, obj.C, obj.d, [], [], obj.predicate_lb, obj.predicate_ub, options);
             if exitflag == 1
                 bool = 0;
-            elseif exitflag == -2
+            elseif exitflag == -2 || exitflag == -9 || exitflag == -5 || exitflag == 0
                 bool = 1;
             else
                 error('Error, exitflag = %d', exitflag);
@@ -342,7 +347,7 @@ classdef Star
             Ae = obj.V(:, 2:obj.nVar+1);
             be = s - obj.V(:,1);
             
-            P = Polyhedron('A', A, 'b', b, 'Ae', Ae, 'be', be);
+            P = Polyhedron('A', A, 'b', b, 'Ae', Ae, 'be', be, 'lb', obj.predicate_lb, 'ub', obj.predicate_ub);
             
             bool = ~P.isEmptySet;
                      
@@ -464,6 +469,42 @@ classdef Star
             end
                 
         end
+        
+         % New Minkowski Sum (used for Recurrent Layer reachability)
+        function S = Sum(obj, X)
+            % @X: another star with same dimension
+            % @S: new star
+            
+            if ~isa(X, 'Star')
+                error('Input matrix is not a Star');
+            else
+                if X.dim ~= obj.dim
+                    error('Input star and current star have different dimensions');
+                end
+            end
+            
+            m1 = size(obj.V, 2);
+            m2 = size(X.V, 2);
+            
+            V1 = obj.V(:, 2:m1);
+            V2 = X.V(:, 2:m2);
+            
+            V3 = horzcat(V1, V2);
+            new_c = obj.V(:, 1) + X.V(:, 1);
+            new_V = horzcat(new_c, V3);        
+            new_C = blkdiag(obj.C, X.C);        
+            new_d = vertcat(obj.d, X.d);
+            
+            if ~isempty(obj.predicate_lb) && ~isempty(X.predicate_lb)
+                new_predicate_lb = [obj.predicate_lb; X.predicate_lb];
+                new_predicate_ub = [obj.predicate_ub; X.predicate_ub];
+                S = Star(new_V, new_C, new_d, new_predicate_lb, new_predicate_ub);
+            else
+                S = Star(new_V, new_C, new_d); % new Star has more number of basic vectors
+            end
+       
+        end
+        
         
         % intersection with a half space: H(x) := Hx <= g
         function S = intersectHalfSpace(obj, H, g)
@@ -1437,6 +1478,24 @@ classdef Star
             lb = obj.V(:, 1) + xmin1 + xmin2;
             ub = obj.V(:, 1) + xmax1 + xmax2;
             
+        end
+        
+        % estimate quickly max-point candidates
+        function max_cands = get_max_point_candidates(obj)
+            %@max_cands: an array of indexes of max-point candidates
+            
+            % author: Dung Tran
+            % date: 7/29/2021
+            
+            [lb, ub] = obj.estimateRanges();
+            [a, id] = max(lb);
+            b = (ub >= a);
+            if sum(b) == 1
+                max_cands = id;
+            else
+                max_cands = find(b);
+            end
+                   
         end
         
         % check if a index is larger than other

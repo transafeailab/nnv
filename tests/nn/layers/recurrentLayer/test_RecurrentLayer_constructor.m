@@ -1,0 +1,1 @@
+L = RecurrentLayer.rand(3, 2, 2, {'poslin', 'pureline'})

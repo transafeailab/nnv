@@ -328,8 +328,7 @@ classdef PosLin
             
              if ~isempty(I)
                             
-                [lb, ub] = I.estimateRanges;
-                
+                [lb, ub] = I.estimateRanges;                
                 if isempty(lb) || isempty(ub)
                     S = [];
                 else
@@ -469,8 +468,7 @@ classdef PosLin
                 otherwise
                     error('Invalid number of input arguments, should be 2, 3 or 4');
             end
-            
-            
+                         
              n = length(In);
              S = [];
              if strcmp(option, 'parallel')
@@ -2054,8 +2052,8 @@ classdef PosLin
                     error('Invalid number of input arguments (should be 1, 2, 3, 4, or 5)');
             end
             
-            
-            if strcmp(method, 'exact-star') % exact analysis using star
+          
+            if strcmp(method, 'exact-star') % exact analysis using star           
                 R = PosLin.reach_star_exact_multipleInputs(I, option, dis_opt, lp_solver);
             elseif strcmp(method, 'exact-polyhedron') % exact analysis using polyhedron
                 R = PosLin.reach_polyhedron_exact(I, option, dis_opt);
