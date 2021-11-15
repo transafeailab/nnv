@@ -46,6 +46,7 @@ x = x';
 
 eps = 0.01; % adversarial disturbance bound: |xi' - xi| <= eps
 Tmax = [5 10 15 20];
+TimeOut_Tmax = 10; % time out
 N = length(Tmax);
 rb1 = cell(M,N);
 vt1 = Inf(M,N);
@@ -58,7 +59,7 @@ for k=1:M
         for j=1:Tmax(i)
             input_points = [input_points x(:, k)];
         end
-        if Tmax(i) <= 10 % TIME OUT for Tmax = 15 and Tmax = 20
+        if Tmax(i) <= TimeOut_Tmax % TIME OUT for Tmax = 15 and Tmax = 20
             [rb1{k, i}, vt1(k, i)] = net.verifyRBN(input_points, eps);
         end
     end
@@ -96,7 +97,7 @@ for k=1:M
         for j=1:Tmax(i)
             input_points = [input_points x(:, k)];
         end
-        if Tmax(i) <= 10 % TIME OUT for Tmax > 10
+        if Tmax(i) <= TimeOut_Tmax % TIME OUT for Tmax > 10
             [rb2{k, i}, vt2(k, i)] = net.verifyRBN(input_points, eps, 'normal', 1, RF, 'relax-star-area');
         end
     end
