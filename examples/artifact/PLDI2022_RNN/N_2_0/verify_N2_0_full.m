@@ -79,7 +79,7 @@ for k=1:M
         for j=1:Tmax(i)
             input_points = [input_points x(:, k)];
         end
-        [rb2{k, i}, vt2(k, i)] = net.verifyRBN(input_points, eps, 'fast', 1, RF, 'relax-star-area');
+        [rb2{k, i}, vt2(k, i)] = net.verifyRBN(input_points, eps, 'normal', 1, RF, 'relax-star-area');
     end
 end
 
