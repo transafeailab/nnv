@@ -194,7 +194,7 @@ N_4_4
 
 %% print latex table
 fileID = fopen('N_4_4_full_tab.tex','w');
-formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{2,0}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
+formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{4,4}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 formatSpec2 = ' & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 for i=1:N
     if i==1

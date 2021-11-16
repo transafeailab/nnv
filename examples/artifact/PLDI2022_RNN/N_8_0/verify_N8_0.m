@@ -176,7 +176,7 @@ N_8_0
 
 %% print latex table
 fileID = fopen('N_8_0_small_tab.tex','w');
-formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{2,0}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
+formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{8,0}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 formatSpec2 = ' & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 for i=1:N
     if i==1
