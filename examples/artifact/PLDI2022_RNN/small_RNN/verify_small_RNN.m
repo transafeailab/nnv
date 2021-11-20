@@ -10,7 +10,7 @@ rnn.fh = 'poslin';
 
 rnn.Wo = double(W); % outputs 
 rnn.bo = double(b);
-rnn.fo = 'purelin';
+rnn.fo = 'poslin';
 
 L1 = RecurrentLayer(rnn); % recurrent layer
 L = {L1}; % all layers of the networks
