@@ -61,9 +61,11 @@ Move into the directory and extract the content
 
 2) Setting up the environment variables
 
+Open the `~/.bashrc` file.
+
       vim ~/.bashrc
 
-add the following lines, replacing {PATH_TO_YOUR_HOME} with the _aboslute_ path to your home directory, and save the file:
+Add the following lines, replacing {PATH_TO_YOUR_HOME} with the _aboslute_ path to your home directory, and save the file:
 
       export GUROBI_HOME="{PATH_TO_YOUR_HOME}/opt/gurobi1000/linux64"
       export GRB_LICENSE_FILE="{PATH_TO_YOUR_HOME}/gurobi.lic"
@@ -74,7 +76,7 @@ Note: If you installed Gurobi or the license file into a different directory you
 
 After saving, reload .bashrc:
 
-`source ~/.bashrc`
+      source ~/.bashrc
 
 3) Acquire your license from https://www.gurobi.com/academia/academic-program-and-licenses/
 
