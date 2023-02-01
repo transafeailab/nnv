@@ -23,23 +23,21 @@ Detailed installation of NNV is available at:
 
 https://github.com/transafeailab/nnv#installation
 
-### 1.2 Clone NNV repository:
+### 1.2 Clone NNV repository
 
-`git clone https://github.com/transafeailab/nnv.git`
+      git clone https://github.com/transafeailab/nnv.git
 
 ### 1.3 Install NNV (install.m)
 In Matlab, navigate to the `/nnv` folder. Execute the `install.m` script, which will set up various dependencies (mostly via tbxmanager). This should also set up the path correctly within Matlab so all dependencies are available.
 
-`install`
-
 https://github.com/transafeailab/nnv/blob/master/install.m
 
-If Matlab is restarted, to work again, either `install.m` must be executed again. Alternatively, one can `savepath` to update the path after executing install (but in this case, Matlab may need to have been launched with administrative privilege).
+If Matlab is restarted, to work again, `install.m` must be executed again. Alternatively, one can `savepath` to update the path after executing install (but in this case, Matlab may need to have been launched with administrative privilege).
 
 
 ### 1.4 Install Gurobi
 
-1) Dowload Gurobi and extract
+1) Dowload Gurobi and extract.
 
 Go to https://www.gurobi.com/downloads/ and download the correct version of Gurobi.
 
@@ -52,14 +50,14 @@ https://www.gurobi.com/documentation/10.0/remoteservices/linux_installation.html
 
 Note: You might have to create the ~/opt/ directory using mkdir ~/opt first.
 
-Move into the directory and extract the content
+Move into the directory and extract the content.
 
       cd ~/opt/
       tar -xzvf gurobi10.0.0_linux64.tar.gz
       rm gurobi10.0.0_linux64.tar.gz
 
 
-2) Setting up the environment variables
+2) Setting up the environment variables.
 
 Open the `~/.bashrc` file.
 
