@@ -15,7 +15,7 @@ clear;
 verify_N2_0_full; % produce Table 4
 
 
-cd ../N_2_0;
+cd ../N_2_2;
 %% run robustness verification of the N_2_2 RNN network
 clear;
 verify_N_2_2; % produce N_2_2 part of Table 2 
