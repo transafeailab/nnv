@@ -35,7 +35,7 @@ https://github.com/transafeailab/nnv/blob/master/install.m
 If Matlab is restarted, to work again, `install.m` must be executed again. Alternatively, one can `savepath` to update the path after executing install (but in this case, Matlab may need to have been launched with administrative privilege).
 
 
-### 1.4 Install Gurobi
+### 1.4 Install Gurobi for MATLAB
 
 1) Dowload Gurobi and extract.
 
