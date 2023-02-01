@@ -74,7 +74,7 @@ Note: If you installed Gurobi or the license file into a different directory you
 
 After saving, reload .bashrc:
 
-      source ~/.bashrc
+`source ~/.bashrc`
 
 3) Acquire your license from https://www.gurobi.com/academia/academic-program-and-licenses/
 
@@ -84,7 +84,7 @@ At `~/opt/gurobi1000/linux64/bin` copy the `grbgetkey` line from the site and en
 
 https://www.gurobi.com/documentation/10.0/quickstart_linux/matlab_setting_up_grb_for_.html
 
-To setup Gurobi for MATLAB, you need to launch the Gurobi MATLAB setup script, `gurobi_steup.m`, located at `~ /opt/gurobi1000/linux64/matlab`.
+To setup Gurobi for MATLAB, you need to launch the Gurobi MATLAB setup script, `gurobi_steup.m` located at `~ /opt/gurobi1000/linux64/matlab` in MATLAB.
 
 Add the directory below to MATLAB such that `linprog` function will launch based on `gurobi` optimization instead of MATLAB optimization.
 
