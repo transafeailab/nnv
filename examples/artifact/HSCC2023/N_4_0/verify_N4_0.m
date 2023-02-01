@@ -17,8 +17,9 @@ L3 = LayerS(double(W{2}),double(b{2}), 'poslin'); % feedfoward
 L4 = LayerS(double(W{3}),double(b{3}), 'poslin'); % feedfoward
 L5 = LayerS(double(W{4}),double(b{4}), 'poslin'); % feedfoward
 L6 = LayerS(double(W{5}),double(b{5}), 'poslin'); % feedfoward
+L7 = LayerS(double(W{6}),double(b{6}), 'purelin'); % feedfoward
 
-L = {L1, L2, L3, L4, L5, L6 }; % all layers of the networks
+L = {L1, L2, L3, L4, L5, L6, L7}; % all layers of the networks
 
 net = VanillaRNN(L, 'N_4_0');
 

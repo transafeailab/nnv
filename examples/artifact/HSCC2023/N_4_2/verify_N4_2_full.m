@@ -1,27 +1,42 @@
 %% Construct the network
 load dense.mat;
-load simple_rnn_3.mat;
+load simple_rnn_4.mat;
 
 rnn.bh = double(bias);
 rnn.Wi = double(kernel);
 rnn.Wh = double(recurrent_kernel);
 rnn.fh = 'poslin';
 
-rnn.Wo = eye(8); % outputs equal to hidden states
-rnn.bo = zeros(8,1);
+rnn.Wo = eye(4); % outputs equal to hidden states
+rnn.bo = zeros(4,1);
 rnn.fo = 'purelin';
 
 L1 = RecurrentLayer(rnn); % recurrent layer
-L2 = LayerS(double(W{1}),double(b{1}), 'poslin'); % feedfoward
-L3 = LayerS(double(W{2}),double(b{2}), 'poslin'); % feedfoward
-L4 = LayerS(double(W{3}),double(b{3}), 'poslin'); % feedfoward
-L5 = LayerS(double(W{4}),double(b{4}), 'poslin'); % feedfoward
-L6 = LayerS(double(W{5}),double(b{5}), 'poslin'); % feedfoward
-L7 = LayerS(double(W{6}),double(b{6}), 'poslin'); % feedfoward
 
-L = {L1, L2, L3, L4, L5, L6, L7}; % all layers of the networks
+load simple_rnn_5.mat;
 
-net = VanillaRNN(L, 'N_8_0');
+rnn.bh = double(bias);
+rnn.Wi = double(kernel);
+rnn.Wh = double(recurrent_kernel);
+rnn.fh = 'poslin';
+
+rnn.Wo = eye(2); % outputs equal to hidden states
+rnn.bo = zeros(2,1);
+rnn.fo = 'purelin';
+
+L2 = RecurrentLayer(rnn); % recurrent layer
+
+
+L3 = LayerS(double(W{1}),double(b{1}), 'poslin'); % feedfoward
+L4 = LayerS(double(W{2}),double(b{2}), 'poslin'); % feedfoward
+L5 = LayerS(double(W{3}),double(b{3}), 'poslin'); % feedfoward
+L6 = LayerS(double(W{4}),double(b{4}), 'poslin'); % feedfoward
+L7 = LayerS(double(W{5}),double(b{5}), 'poslin'); % feedfoward
+L8 = LayerS(double(W{6}),double(b{6}), 'purelin'); % feedfoward
+
+L = {L1, L2, L3, L4, L5, L6, L7, L8}; % all layers of the networks
+
+net = VanillaRNN(L, 'N_4_2');
 
 
 %% Create the input points & Verify the network
@@ -31,7 +46,7 @@ x = pickle_data(1:M,:); % load first M datapoints
 x = x';
 
 eps = 0.01; % adversarial disturbance bound: |xi' - xi| <= eps
-Tmax = [5 10 15 20];
+Tmax = [2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20];
 N = length(Tmax);
 rb1 = cell(M,N);
 vt1 = Inf(M,N);
@@ -149,43 +164,45 @@ end
 % load RnnVerify Result
 load RnnVerify_result.mat;
 
-RnnVerify_VT = T.rnn4_5fc32_avg_time;
-RnnVerify_robust = T.rnn4_5fc32_result;
-RnnV_rb = RnnVerify_robust([4 9 14 19]);
-RnnV_vt = RnnVerify_VT([4 9 14 19]);
-N_8_0 = table;
-N_8_0.Tmax = Tmax';
-N_8_0.RnnVerify_Robust = RnnV_rb;
-N_8_0.RnnVerify_VT = RnnV_vt;
-N_8_0.NNV_Robust = rb11; 
-N_8_0.rc = rb11 - RnnV_rb; % conservativeness improvement
-N_8_0.NNV_VT = vt1;
-N_8_0.rt = RnnV_vt./vt1;% time improvement
-N_8_0.NNV_RF_05_Robust = rb22; % relaxed reachability with RF = 0.5
-N_8_0.NNV_RF_05_rc = rb22 - RnnV_rb; % conservativeness improvement
-N_8_0.NNV_RF_05_VT = vt2; % relaxed reachability with RF = 0.5
-N_8_0.NNV_RF_05_rt = RnnV_vt./vt2; % conservativeness improvement
+RnnVerify_VT = T.rnn42_5fc32_time;
+RnnVerify_robust = T.rnn42_5fc32_result;
+RnnV_rb = RnnVerify_robust;
+RnnV_vt = RnnVerify_VT;
+N_4_2 = table;
+N_4_2.Tmax = Tmax';
+N_4_2.RnnVerify_Robust = RnnV_rb;
+N_4_2.RnnVerify_VT = RnnV_vt;
+N_4_2.NNV_Robust = rb11; 
+N_4_2.rc = rb11 - RnnV_rb; % conservativeness improvement
+N_4_2.NNV_VT = vt1;
+N_4_2.rt = RnnV_vt./vt1;% time improvement
+N_4_2.NNV_RF_05_Robust = rb22; % relaxed reachability with RF = 0.5
+N_4_2.NNV_RF_05_rc = rb22 - RnnV_rb; % conservativeness improvement
+N_4_2.NNV_RF_05_VT = vt2; % relaxed reachability with RF = 0.5
+N_4_2.NNV_RF_05_rt = RnnV_vt./vt2; % conservativeness improvement
 
-N_8_0.NNV_RF_1_Robust = rb33; % relaxed reachability with RF = 0.5
-N_8_0.NNV_RF_1_rc = rb33 - RnnV_rb; % conservativeness improvement
-N_8_0.NNV_RF_1_VT = vt3; % relaxed reachability with RF = 0.5
-N_8_0.NNV_RF_1_rt = RnnV_vt./vt3; % conservativeness improvement
+N_4_2.NNV_RF_1_Robust = rb33; % relaxed reachability with RF = 0.5
+N_4_2.NNV_RF_1_rc = rb33 - RnnV_rb; % conservativeness improvement
+N_4_2.NNV_RF_1_VT = vt3; % relaxed reachability with RF = 0.5
+N_4_2.NNV_RF_1_rt = RnnV_vt./vt3; % conservativeness improvement
 
 
-N_8_0
+N_4_2
 
 %% print latex table
-fileID = fopen('N_8_0_small_tab.tex','w');
-formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{8,0}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
+fileID = fopen('N_4_2_full_tab.tex','w');
+formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{4,2}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 formatSpec2 = ' & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 for i=1:N
     if i==1
-        fprintf(fileID, formatSpec1, Tmax(i), RnnV_rb(i), RnnV_vt(i), rb11(i), N_8_0.rc(i), vt1(i), N_8_0.rt(i), rb22(i), N_8_0.NNV_RF_05_rc(i), vt2(i), N_8_0.NNV_RF_05_rt(i), rb33(i), N_8_0.NNV_RF_1_rc(i), vt3(i), N_8_0.NNV_RF_1_rt(i));
+        fprintf(fileID, formatSpec1, Tmax(i), RnnV_rb(i), RnnV_vt(i), rb11(i), N_4_2.rc(i), vt1(i), N_4_2.rt(i), rb22(i), N_4_2.NNV_RF_05_rc(i), vt2(i), N_4_2.NNV_RF_05_rt(i), rb33(i), N_4_2.NNV_RF_1_rc(i), vt3(i), N_4_2.NNV_RF_1_rt(i));
     else
-        fprintf(fileID, formatSpec2, Tmax(i), RnnV_rb(i), RnnV_vt(i), rb11(i), N_8_0.rc(i), vt1(i), N_8_0.rt(i), rb22(i), N_8_0.NNV_RF_05_rc(i), vt2(i), N_8_0.NNV_RF_05_rt(i), rb33(i), N_8_0.NNV_RF_1_rc(i), vt3(i), N_8_0.NNV_RF_1_rt(i));
+        fprintf(fileID, formatSpec2, Tmax(i), RnnV_rb(i), RnnV_vt(i), rb11(i), N_4_2.rc(i), vt1(i), N_4_2.rt(i), rb22(i), N_4_2.NNV_RF_05_rc(i), vt2(i), N_4_2.NNV_RF_05_rt(i), rb33(i), N_4_2.NNV_RF_1_rc(i), vt3(i), N_4_2.NNV_RF_1_rt(i));
     end
     
 end
 fclose(fileID);
+
+save N_4_2_result_full.mat N_4_2;
 
 total_time = toc(t);

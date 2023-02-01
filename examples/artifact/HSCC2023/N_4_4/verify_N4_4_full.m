@@ -32,7 +32,7 @@ L4 = LayerS(double(W{2}),double(b{2}), 'poslin'); % feedfoward
 L5 = LayerS(double(W{3}),double(b{3}), 'poslin'); % feedfoward
 L6 = LayerS(double(W{4}),double(b{4}), 'poslin'); % feedfoward
 L7 = LayerS(double(W{5}),double(b{5}), 'poslin'); % feedfoward
-L8 = LayerS(double(W{6}),double(b{6}), 'poslin'); % feedfoward
+L8 = LayerS(double(W{6}),double(b{6}), 'purelin'); % feedfoward
 
 L = {L1, L2, L3, L4, L5, L6, L7, L8}; % all layers of the networks
 
@@ -46,7 +46,7 @@ x = pickle_data(1:M,:); % load first M datapoints
 x = x';
 
 eps = 0.01; % adversarial disturbance bound: |xi' - xi| <= eps
-Tmax = [5 10 15 20];
+Tmax = [2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20];
 TimeOut_Tmax = 15; 
 N = length(Tmax);
 rb1 = cell(M,N);
@@ -169,8 +169,8 @@ load RnnVerify_result.mat;
 
 RnnVerify_VT = T.rnn44_5fc32_avg_time;
 RnnVerify_robust = T.rnn44_5fc32_result;
-RnnV_rb = RnnVerify_robust([4 9 14 19]);
-RnnV_vt = RnnVerify_VT([4 9 14 19]);
+RnnV_rb = RnnVerify_robust;
+RnnV_vt = RnnVerify_VT;
 N_4_4 = table;
 N_4_4.Tmax = Tmax';
 N_4_4.RnnVerify_Robust = RnnV_rb;
@@ -193,7 +193,7 @@ N_4_4.NNV_RF_1_rt = RnnV_vt./vt3; % conservativeness improvement
 N_4_4
 
 %% print latex table
-fileID = fopen('N_4_4_small_tab.tex','w');
+fileID = fopen('N_4_4_full_tab.tex','w');
 formatSpec1 = '\\multirow{4}{*}{$\\mathcal{N}_{4,4}$} & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 formatSpec2 = ' & $%d$ & $%d$ & $%1.2f$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ & $%d$ & $%d$ & $%1.2f$ & $%1.1f\\times$ \\\\ \n';
 for i=1:N
@@ -206,4 +206,5 @@ for i=1:N
 end
 fclose(fileID);
 
+save N_4_4_result_full.mat N_4_4;
 total_time = toc(t);
