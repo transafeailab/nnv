@@ -17,6 +17,8 @@ RAM: at least 32 GB
 
 Matlab version: 2021b or later
 
+Gurobi optimizer: 9.12 version (or later; 10.00 is tested and works)
+
 Detailed installation of NNV is available at:
 
 https://github.com/transafeailab/nnv#installation
@@ -33,6 +35,55 @@ In Matlab, navigate to the `/nnv` folder. Execute the `install.m` script, which 
 https://github.com/transafeailab/nnv/blob/master/install.m
 
 If Matlab is restarted, to work again, either `install.m` must be executed again. Alternatively, one can `savepath` to update the path after executing install (but in this case, Matlab may need to have been launched with administrative privilege).
+
+
+### 1.4 Install Gurobi
+
+1) Dowload Gurobi and extract
+
+Go to https://www.gurobi.com/downloads/ and download the correct version of Gurobi
+
+wget https://packages.gurobi.com/10.0/gurobi10.0.0_linux64.tar.gz
+
+https://www.gurobi.com/documentation/10.0/remoteservices/linux_installation.html recommends installing Gurobi `/opt` for a shared installtion
+
+      mv gurobi10.0.0_linux64.tar.gz ~/opt/
+      tar xvfz gurobi_server10.0.0_linux64.tar.gz
+
+Note: You might have to create the ~/opt/ directory using mkdir ~/opt first.
+
+Move into the directory and extract the content
+
+      cd ~/opt/
+      tar -xzvf gurobi10.0.0_linux64.tar.gz
+      rm gurobi10.0.0_linux64.tar.gz
+
+
+2) Setting up the environment variables
+
+      vim ~/.bashrc
+
+add the following lines, replacing {PATH_TO_YOUR_HOME} with the _aboslute_ path to your home directory, and save the file:
+
+      export GUROBI_HOME="{PATH_TO_YOUR_HOME}/opt/gurobi950/linux64"
+      export GRB_LICENSE_FILE="{PATH_TO_YOUR_HOME}/gurobi.lic"
+      export PATH="${PATH}:${GUROBI_HOME}/bin"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GUROBI_HOME}/lib"
+
+Note: If you installed Gurobi or the license file into a different directory you have to adjust the paths in the first two lines.
+
+After saving, reload .bashrc:
+
+      source ~/.bashrc
+
+3) Acquire your license from https://www.gurobi.com/academia/academic-program-and-licenses/
+
+At ~/opt/gurobi1000/linux64/bin copy the `grbgetkey` line from the site and enter it into a terminal.
+
+4) Setting up Gurobi for MATLAB
+
+Follow https://www.gurobi.com/documentation/10.0/quickstart_linux/matlab_setting_up_grb_for_.html
+
 
 
 ## 2. RnnVerify Installation
