@@ -1,5 +1,4 @@
 # Verification of Recurrent Neural Networks with Star Reachability
-Hoang Dung Tran, Sung Woo Choi, Xiaodong Yang, Tomoya Yamaguchi, Bardh Hoxha and Danil Prokhorov
 
 ## HSCC2023
 
